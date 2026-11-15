@@ -25,11 +25,13 @@ bekerja di luar negeri. Progres dicatat per level CEFR dan per skill
 
 ```
 apps/api/            Go module: github.com/arifinoid/eng-geek/apps/api
-  cmd/server/        HTTP server (healthz, redirect / -> /id, static export)
-  cmd/seed/          seeder YAML -> Postgres (rencana)
+  cmd/server/        HTTP server (/api/v1 + healthz + static export)
+  cmd/seed/          seeder YAML -> Postgres (idempotent)
   cmd/tts/           script/lines -> audio (rencana)
   db/migrations/     migrations goose (source of truth schema)
   db/queries/        query sqlc per domain
+  internal/api/      handler HTTP /api/v1 (mapping request/JSON)
+  internal/content/  parser + validator konten YAML (pure)
   internal/rating/   Elo per skill (pure, no DB)
   internal/srs/      SM-2 SRS (pure)
   internal/store/    output sqlc (generated, jangan edit)
@@ -99,4 +101,9 @@ bun run dev:web                 # Next dev (:3000)
 bun run build:web               # static export -> apps/web/out
 docker compose up -d db         # Postgres lokal
 goose -dir apps/api/db/migrations postgres "$DATABASE_URL" up
+bun run seed:api                # content YAML + demo household/profiles
 ```
+
+API Contract: `GET /api/v1/profiles?householdId=`, `GET /api/v1/profiles/{profileId}`,
+`GET /api/v1/units?profileId=`. Response memakai DTO di `internal/api` supaya tipe
+enum sqlc (mis. `NullTrack`) serialisasi sesuai kontrak (`null`/string).

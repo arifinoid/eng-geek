@@ -14,6 +14,15 @@ paths:
       operationId: listProfiles
       tags: [profiles]
       summary: List profiles in the household
+      parameters:
+        - name: householdId
+          in: query
+          required: false
+          description: Household id. Defaults to 1 for the single-household setup.
+          schema:
+            type: integer
+            format: int64
+            default: 1
       responses:
         "200":
           description: Profiles in the household

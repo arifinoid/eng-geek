@@ -30,6 +30,7 @@ Local Postgres + migrations:
 docker compose up -d db
 export DATABASE_URL=postgres://enggreek:enggreek@localhost:5432/enggreek?sslmode=disable
 goose -dir apps/api/db/migrations postgres "$DATABASE_URL" up
+bun run seed:api        # content YAML + demo household/profiles
 ```
 
 Run the app (Go server serves the API and the static export):

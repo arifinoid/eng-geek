@@ -112,6 +112,22 @@ satu container, tanpa Node runtime, dan PWA tetap offline.
 `next-intl` dengan locale `id` (default) dan `en`. Alasan: pemilik aplikasi berbahasa
 Indonesia, tapi konten belajar dan kode tetap Inggris.
 
+## D-021: Seeder idempoten + validator konten murni
+
+`apps/api/cmd/seed` membaca `apps/api/content/a1/*.yaml`, memvalidasi (template 9
+activity, formula difficulty, jawaban, skill lengkap, prefix filename), lalu upsert.
+Validator di `internal/content` murni (tanpa DB) supaya bisa dites. Activity unit
+tidak diubah lagi setelah unit punya attempt, agar riwayat attempt tetap valid.
+Alasan: konten bisa diedit dan di-review via git, tapi data attempt tidak boleh
+rusak.
+
+## D-022: Response API pakai DTO, bukan struct sqlc
+
+sqlc memetakan enum Postgres ke tipe Go (mis. `NullTrack`) yang serialisasinya
+tidak cocok dengan kontrak (`{"track":"","valid":false}`). Handler `internal/api`
+memetakan ke DTO sendiri (`track: null` atau string) supaya JSON mengikuti
+`packages/api-contract`. Alasan: kontrak API adalah sumber kebenaran frontend.
+
 ## Open decisions
 
 - Gate A2->B1 dan seterusnya: sementara reuse pola 80% / 70% / next-level-min.

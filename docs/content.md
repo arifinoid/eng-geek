@@ -171,15 +171,19 @@ apps/api/cmd/seed/main.go
 
 Perilaku:
 
-1. Baca semua YAML di `content/a1/`.
-2. Upsert unit by `(level_code, track, position)`.
+1. Baca semua YAML di `apps/api/content/a1/` (parser + validator di
+   `apps/api/internal/content`).
+2. Upsert unit by `(level_code, track, position)`. Unit shared (`track: null`)
+   dipisah dari unit track karena Postgres memperlakukan NULL sebagai berbeda.
 3. Activity: delete & re-insert per unit **hanya kalau unit belum punya attempt**;
-   kalau sudah, insert versi baru dan tandai lama retired (tambah kolom `retired_at`
-   di migrasi berikutnya) supaya riwayat attempt tetap valid.
+   kalau sudah ada attempt, activity lama dibiarkan supaya riwayat attempt valid.
 4. Upsert vocab ke `vocab_items` by `(term, level_code)`.
-5. Validasi sebelum tulis: 4 skill ada, semua `answer` valid, difficulty sesuai
-   formula, `track` cocok dengan filename.
+5. Validasi sebelum tulis: template 9 activity sesuai urutan + type + skill,
+   difficulty sesuai formula, keempat skill ada, semua `answer` valid, dan
+   prefix filename sama dengan `position`.
 6. Idempotent, bisa dijalankan ulang setelah konten diedit.
+7. Seeder juga memastikan household `My Household` + profil `Engineer` (ielts)
+   dan `Nurse` (oet) ada, sebagai data awal development.
 
 TTS: `apps/api/cmd/tts` membangkitkan audio dari `script`/`lines`, cache by hash teks,
 simpan path di activity.

@@ -60,6 +60,11 @@ export interface Unit {
  */
 export type NotFoundResponse = Error;
 
+export type ListProfilesParams = {
+  /** Household id. Defaults to 1 for the single-household setup. */
+  householdId?: number;
+};
+
 export type ListUnitsParams = {
   profileId: number;
 };

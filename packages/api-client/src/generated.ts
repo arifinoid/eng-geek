@@ -21,6 +21,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ListProfilesParams,
   ListUnitsParams,
   NotFoundResponse,
   Profile,
@@ -58,20 +59,27 @@ export type listProfilesResponseSuccess = (listProfilesResponse200) & {
 
 export type listProfilesResponse = (listProfilesResponseSuccess)
 
-export const getListProfilesUrl = () => {
+export const getListProfilesUrl = (params?: ListProfilesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/profiles`
+  return stringifiedParams.length > 0 ? `/profiles?${stringifiedParams}` : `/profiles`
 }
 
 /**
  * @summary List profiles in the household
  */
-export const listProfiles = async ( options?: RequestInit): Promise<listProfilesResponse> => {
+export const listProfiles = async (params?: ListProfilesParams, options?: RequestInit): Promise<listProfilesResponse> => {
 
-  const res = await fetch(getListProfilesUrl(),
+  const res = await fetch(getListProfilesUrl(params),
   {
     ...options,
     method: 'GET'
@@ -91,23 +99,23 @@ export const listProfiles = async ( options?: RequestInit): Promise<listProfiles
 
 
 
-export const getListProfilesQueryKey = () => {
+export const getListProfilesQueryKey = (params?: ListProfilesParams,) => {
     return [
-    `/profiles`
+    `/profiles`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListProfilesQueryOptions = <TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
+export const getListProfilesQueryOptions = <TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>(params?: ListProfilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListProfilesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListProfilesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProfiles>>> = ({ signal }) => listProfiles({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProfiles>>> = ({ signal }) => listProfiles(params, { signal, ...fetchOptions });
 
 
 
@@ -122,7 +130,7 @@ export type ListProfilesQueryError = unknown
 
 /** @summary List profiles in the household */
 export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>> & Pick<
+ params: undefined |  ListProfilesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listProfiles>>,
           TError,
@@ -133,7 +141,7 @@ export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary List profiles in the household */
 export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>> & Pick<
+ params?: ListProfilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listProfiles>>,
           TError,
@@ -144,16 +152,16 @@ export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary List profiles in the household */
 export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
+ params?: ListProfilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /** @summary List profiles in the household */
 export function useListProfiles<TData = Awaited<ReturnType<typeof listProfiles>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
+ params?: ListProfilesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProfiles>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListProfilesQueryOptions(options)
+  const queryOptions = getListProfilesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

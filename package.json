@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev:api": "go -C apps/api run ./cmd/server",
+    "seed:api": "go -C apps/api run ./cmd/seed",
     "dev:web": "bun run --filter @eng-geek/web dev",
     "build:web": "bun run --filter @eng-geek/web build",
     "lint:web": "bun run --filter @eng-geek/web lint",

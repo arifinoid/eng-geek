@@ -13,7 +13,7 @@ r_new = clamp(r + delta, 400, 2200)
 - `r` = rating skill, `d` = difficulty activity, `s` = score 0..1.
 - Start rating **800** (pemula total), clamp 400-2200.
 - K-factor: **32** (<20 attempt), **24** (20-99), **16** (100+).
-- Implementasi: `internal/rating/rating.go` + `rating_test.go`.
+- Implementasi: `apps/api/internal/rating/rating.go` + `rating_test.go`.
 
 Contoh: `r=800`, `d=900`, `s=0.8`, 5 attempt -> `E≈0.36`, `delta≈+14.1`, `r≈814.1`.
 
@@ -55,7 +55,7 @@ Kalau terpenuhi: `CompleteLevel(A1)` lalu `StartLevel(A2)`.
 
 ## SRS (SM-2 style)
 
-Implementasi: `internal/srs/srs.go` + `srs_test.go`. Grade: 0 forgot, 1 hard, 2 good, 3 easy.
+Implementasi: `apps/api/internal/srs/srs.go` + `srs_test.go`. Grade: 0 forgot, 1 hard, 2 good, 3 easy.
 
 - **Forgot**: `lapses++`, `reps=0`, `interval=1`, `ease -= 0.2` (min 1.3), due +10 menit.
 - **Good**: interval 1 (reps 0), 3 (reps 1), lalu `round(interval * ease)`.

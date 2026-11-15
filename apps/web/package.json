@@ -1,0 +1,51 @@
+{
+  "name": "@eng-geek/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@eng-geek/api-client": "*",
+    "@hookform/resolvers": "^7.0.6",
+    "@tanstack/react-query": "^5.107.1",
+    "next": "16.4.6",
+    "next-intl": "^4.15.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "^7.92.0",
+    "recharts": "^3.10.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eng-geek/tsconfig": "*",
+    "@serwist/next": "^9.5.13",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.3.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "serwist": "^9.5.13",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
+  },
+  "packageManager": "bun@1.4.2",
+  "ignoreScripts": [
+    "sharp",
+    "unrs-resolver"
+  ],
+  "trustedDependencies": [
+    "sharp",
+    "unrs-resolver"
+  ]
+}

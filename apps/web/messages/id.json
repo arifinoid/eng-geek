@@ -1,0 +1,20 @@
+{
+  "app": {
+    "name": "eng-geek",
+    "tagline": "Belajar bahasa Inggris, dipersonalisasi untukmu."
+  },
+  "nav": {
+    "home": "Beranda",
+    "practice": "Latihan",
+    "dashboard": "Progres"
+  },
+  "home": {
+    "title": "Selamat datang di eng-geek",
+    "subtitle": "Mulai dari A1, capai target IELTS/OET kamu.",
+    "cta": "Mulai latihan"
+  },
+  "practice": {
+    "title": "Latihan",
+    "subtitle": "Pilih aktivitas untuk profil aktif."
+  }
+}

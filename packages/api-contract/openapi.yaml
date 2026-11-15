@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: eng-geek API
+  version: 0.1.0
+  description: Personalized English learning tracker. Two profiles, per-skill CEFR progress.
+servers:
+  - url: /api/v1
+tags:
+  - name: profiles
+  - name: content
+paths:
+  /profiles:
+    get:
+      operationId: listProfiles
+      tags: [profiles]
+      summary: List profiles in the household
+      responses:
+        "200":
+          description: Profiles in the household
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Profile"
+  /profiles/{profileId}:
+    get:
+      operationId: getProfile
+      tags: [profiles]
+      summary: Get one profile
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: The profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /units:
+    get:
+      operationId: listUnits
+      tags: [content]
+      summary: List units for a profile
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Units available to the profile
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Unit"
+components:
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required: [code, message]
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        track:
+          type: string
+          enum: [engineer, nurse]
+        target_exam:
+          type: string
+          enum: [ielts, oet]
+        exam_date:
+          type: string
+          format: date
+          nullable: true
+      required: [id, name, track, target_exam]
+    Unit:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        level_code:
+          type: string
+          example: A1
+        track:
+          type: string
+          enum: [engineer, nurse]
+          nullable: true
+        title:
+          type: string
+        position:
+          type: integer
+      required: [id, level_code, title, position]

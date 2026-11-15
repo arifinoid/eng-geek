@@ -10,31 +10,46 @@ is tracked per CEFR level and per skill (listening, reading, writing, speaking).
 
 ## Stack
 
-Go 1.24 + Postgres (`pgx`, `sqlc`, `goose`) · `River` jobs · Anthropic SDK + Whisper ·
-TypeScript PWA (React + Vite) in `web/` · Nix flake · single Docker image.
+Bun workspaces monorepo. Go 1.24+ + Postgres (`pgx`, `sqlc`, `goose`) in `apps/api` ·
+`River` jobs · Anthropic SDK + Whisper · TypeScript PWA in `apps/web` (Next.js static
+export, next-intl `id`/`en`, Tailwind 4, Serwist) · OpenAPI contract in
+`packages/api-contract` → generated TS client in `packages/api-client` · Nix flake ·
+single Docker image.
+
+## Layout
+
+- `apps/api/` — Go module `github.com/arifinoid/eng-geek/apps/api`; `cmd/`, `db/`, `internal/`, `content/`.
+- `apps/web/` — Next.js app (`app/[locale]`, `i18n/`, `messages/`).
+- `packages/` — `api-contract`, `api-client`, `tsconfig`.
 
 ## Gate
 
 Run from the repository root; all must pass before a change is done:
 
 ```bash
-gofmt -l .        # must print nothing
-go vet ./...
-go test ./...
+gofmt -l apps/api     # must print nothing
+go -C apps/api vet ./...
+go -C apps/api test ./...
+bun run lint:web
+bun run typecheck:web
+bun run test:web
+bun run build:web     # static export must succeed
+bun run typecheck:api-client
 ```
 
-Database tooling (install with Nix or `go install`; not vendored):
+Toolchain via `nix develop` (go, bun, sqlc, goose, postgres). Database tooling (install
+with Nix or `go install`; not vendored):
 
 ```bash
-sqlc generate
-goose -dir db/migrations postgres "$DATABASE_URL" up
+cd apps/api && sqlc generate
+goose -dir apps/api/db/migrations postgres "$DATABASE_URL" up
 ```
 
 ## Docs
 
 Read the relevant doc before changing that area:
 
-- `docs/architecture.md` — stack, layout, boundaries, data model.
+- `docs/architecture.md` — monorepo layout, stack, boundaries, data model.
 - `docs/domain.md` — Elo rating, SRS, attempt transaction, level gates, difficulty.
 - `docs/content.md` — A1 unit map, activity template, content JSON shapes, seeder.
 - `docs/roadmap.md` — goals, features, build order, status, open questions.
@@ -47,7 +62,7 @@ Read the relevant doc before changing that area:
 - An activity is done at `score >= 0.7`.
 - Vocab SRS reviews never change skill ratings.
 - A1 -> A2 gate: >=80% activities, checkpoint `overall >= 0.70`, all ratings `>= 1000`.
-- `db/migrations` is the schema source of truth; `internal/store` is generated.
+- `apps/api/db/migrations` is the schema source of truth; `internal/store` is generated.
 
 ## Conventions
 

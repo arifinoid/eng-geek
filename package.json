@@ -1,0 +1,25 @@
+{
+  "name": "eng-geek",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "go -C apps/api run ./cmd/server",
+    "dev:web": "bun run --filter @eng-geek/web dev",
+    "build:web": "bun run --filter @eng-geek/web build",
+    "lint:web": "bun run --filter @eng-geek/web lint",
+    "typecheck:web": "bun run --filter @eng-geek/web typecheck",
+    "test:web": "bun run --filter @eng-geek/web test",
+    "test:api": "go -C apps/api test ./...",
+    "vet:api": "go -C apps/api vet ./...",
+    "fmt:api": "gofmt -l apps/api",
+    "generate:api-client": "bun run --filter @eng-geek/api-client generate",
+    "typecheck:api-client": "bunx tsc -p packages/api-client --noEmit"
+  },
+  "engines": {
+    "bun": ">=1.4"
+  }
+}

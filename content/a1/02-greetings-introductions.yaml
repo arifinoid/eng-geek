@@ -1,0 +1,107 @@
+unit:
+  level: A1
+  week: 2
+  position: 2
+  track: null
+  title: Greetings and Introductions
+
+vocab:
+  - {term: hello, meaning: a greeting, example: "Hello, my name is Ana."}
+  - {term: goodbye, meaning: words you say when you leave, example: "Goodbye, see you tomorrow."}
+  - {term: name, meaning: what people call you, example: "My name is Tom."}
+  - {term: please, meaning: a polite word, example: "Sit down, please."}
+  - {term: thank you, meaning: words to show you are grateful, example: "Thank you for your help."}
+  - {term: sorry, meaning: a word for a mistake, example: "Sorry, I am late."}
+  - {term: yes, meaning: the opposite of no, example: "Yes, I am a student."}
+  - {term: no, meaning: the opposite of yes, example: "No, I am not a teacher."}
+  - {term: from, meaning: the place you come from, example: "I am from Japan."}
+  - {term: country, meaning: a nation like Japan or Peru, example: "Peru is a country."}
+  - {term: nice to meet you, meaning: words when you meet someone, example: "Nice to meet you, Sam."}
+  - {term: friend, meaning: a person you like, example: "She is my friend."}
+  - {term: teacher, meaning: a person who teaches, example: "He is a teacher."}
+  - {term: student, meaning: a person who studies, example: "I am a student."}
+
+activities:
+  - type: vocab
+    skill: reading
+    difficulty: 850
+    content:
+      questions:
+        - {prompt: "Which word means 'a polite word'?", options: [please, name, from], answer: 0}
+        - {prompt: "Which word means 'the place you come from'?", options: [sorry, from, no], answer: 1}
+        - {prompt: "Which words do you say when you meet someone?", options: ["nice to meet you", "goodbye", "sorry"], answer: 0}
+
+  - type: quiz
+    skill: reading
+    difficulty: 850
+    content:
+      questions:
+        - {prompt: "I ___ a student.", options: [am, is, are], answer: 0, explain: "Use 'am' with I."}
+        - {prompt: "She ___ a nurse.", options: [am, is, are], answer: 1, explain: "Use 'is' with he, she, it."}
+        - {prompt: "You ___ from Japan.", options: [am, is, are], answer: 2, explain: "Use 'are' with you, we, they."}
+
+  - type: quiz
+    skill: reading
+    difficulty: 860
+    content:
+      questions:
+        - {prompt: "Is she a teacher? Yes, she ___.", options: [am, is, are], answer: 1}
+        - {prompt: "They ___ not from Peru.", options: [am, is, are], answer: 2}
+        - {prompt: "What ___ your name?", options: [am, is, are], answer: 1}
+
+  - type: listening
+    skill: listening
+    difficulty: 840
+    content:
+      script: "Hello. My name is Tom. I am from Canada. Nice to meet you."
+      audio: "tts:en-US:slow"
+      questions:
+        - {prompt: "What is his name?", options: [Tom, Sam, Tim], answer: 0}
+        - {prompt: "Where is he from?", options: [Canada, Japan, Peru], answer: 0}
+
+  - type: listening
+    skill: listening
+    difficulty: 860
+    content:
+      script: "Anna: Hello, I am Anna. What is your name? Ken: Hi, Anna. I am Ken. Nice to meet you. Anna: Nice to meet you, too. Are you from Japan? Ken: Yes, I am."
+      audio: "tts:en-GB:slow"
+      questions:
+        - {prompt: "Is Ken from Japan?", options: ["Yes", "No"], answer: 0}
+        - {prompt: "Who says 'What is your name?'", options: [Anna, Ken], answer: 0}
+
+  - type: quiz
+    skill: reading
+    difficulty: 850
+    content:
+      passage: "My name is Maria. I am a teacher. I am from Brazil. My friend is Paulo. He is a student. He is from Peru."
+      questions:
+        - {prompt: "What is Maria's job?", options: [teacher, student, nurse], answer: 0}
+        - {prompt: "Where is Paulo from?", options: [Brazil, Peru, Japan], answer: 1}
+        - {prompt: "Paulo is a ___.", options: [teacher, student, nurse], answer: 1}
+
+  - type: writing
+    skill: writing
+    difficulty: 870
+    content:
+      prompt: "Write 4 sentences to introduce yourself. Say your name, your job, and your country."
+      min_words: 20
+      rubric: [task, grammar, vocabulary, spelling]
+      model_answer: "Hello. My name is Ana. I am a nurse. I am from Brazil."
+
+  - type: speaking
+    skill: speaking
+    difficulty: 840
+    content:
+      mode: shadow
+      lines:
+        - "Hello. My name is Tom."
+        - "I am from Canada."
+        - "Nice to meet you."
+
+  - type: speaking
+    skill: speaking
+    difficulty: 870
+    content:
+      mode: answer
+      questions: ["What is your name?", "Where are you from?", "What is your job?"]
+      expected_keywords: [name, from, job]

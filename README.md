@@ -5,8 +5,8 @@ from A1 to IELTS/OET B2-C1. Two profiles, shared core plus professional role pac
 
 ## Status
 
-Scaffold only. The domain specs live in the three `english-*.md` documents at the repository
-root; `CLAUDE.md` holds the guidance for Claude Code.
+Scaffold only. Design and domain rules live in `docs/`; `CLAUDE.md` is the entry point
+for Claude Code.
 
 ## Stack
 
@@ -28,7 +28,9 @@ goose -dir db/migrations postgres "$DATABASE_URL" up
 
 ## Documents
 
-- `english-ielts-tracker-plan.md`
-- `english-tracker-db-and-rating.md`
-- `english-a1-seed-content-plan.md`
 - `CLAUDE.md` — guidance for Claude Code
+- `docs/architecture.md` — stack, layout, data model
+- `docs/domain.md` — rating, SRS, gates
+- `docs/content.md` — A1 content plan and JSON shapes
+- `docs/roadmap.md` — goals and build order
+- `docs/decisions.md` — decisions and rationale

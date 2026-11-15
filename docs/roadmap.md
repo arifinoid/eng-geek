@@ -58,8 +58,9 @@ sudah memberi nilai di minggu pertama.
 - [x] Frontend PWA skeleton: Next.js static export, i18n `id`/`en`, manifest + service worker.
 - [x] Nix flake dev shell, `docker-compose.yml`, `Dockerfile` (satu image).
 - [x] API contract OpenAPI + client TS generated (orval).
-- [ ] HTTP API `/api/v1` + handler (server Go saat ini hanya `healthz` + static export).
-- [ ] `apps/api/cmd/seed` + validator + `apps/api/cmd/tts`.
+- [x] HTTP API `/api/v1` + handler: `profiles`, `profiles/{id}`, `units` (DTO + 400/404).
+- [x] `apps/api/cmd/seed` + validator (`internal/content`) + data awal household/profil.
+- [ ] `apps/api/cmd/tts`.
 - [ ] River + integrasi AI.
 - [ ] Konten A1 lengkap (unit 1, 3-16 + 2 checkpoint set + placement).
 

@@ -10,8 +10,11 @@
 
 # Node / frontend
 node_modules/
-web/dist/
-web/.vite/
+apps/web/.next/
+apps/web/out/
+apps/web/.serwist/
+apps/web/public/sw.js
+*.tsbuildinfo
 
 # Nix
 result

@@ -1,8 +1,9 @@
 # Content (A1)
 
-Konten disimpan sebagai YAML di `content/a1/`, lalu di-seed ke Postgres oleh `cmd/seed`.
-Schema activity mengikuti enum `activity_type` di `db/migrations/00001_init.sql`.
-Contoh lengkap: `content/a1/02-greetings-introductions.yaml`.
+Konten disimpan sebagai YAML di `apps/api/content/a1/`, lalu di-seed ke Postgres oleh
+`apps/api/cmd/seed`. Schema activity mengikuti enum `activity_type` di
+`apps/api/db/migrations/00001_init.sql`.
+Contoh lengkap: `apps/api/content/a1/02-greetings-introductions.yaml`.
 
 ## Scope and numbers
 
@@ -164,8 +165,8 @@ atau
 ## Seeder (`cmd/seed`)
 
 ```
-content/a1/*.yaml
-cmd/seed/main.go
+apps/api/content/a1/*.yaml
+apps/api/cmd/seed/main.go
 ```
 
 Perilaku:
@@ -180,8 +181,8 @@ Perilaku:
    formula, `track` cocok dengan filename.
 6. Idempotent, bisa dijalankan ulang setelah konten diedit.
 
-TTS: `cmd/tts` membangkitkan audio dari `script`/`lines`, cache by hash teks, simpan
-path di activity.
+TTS: `apps/api/cmd/tts` membangkitkan audio dari `script`/`lines`, cache by hash teks,
+simpan path di activity.
 
 ## Authoring prompt
 

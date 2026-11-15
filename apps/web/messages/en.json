@@ -1,0 +1,20 @@
+{
+  "app": {
+    "name": "eng-geek",
+    "tagline": "Learn English, personalised for you."
+  },
+  "nav": {
+    "home": "Home",
+    "practice": "Practice",
+    "dashboard": "Progress"
+  },
+  "home": {
+    "title": "Welcome to eng-geek",
+    "subtitle": "Start at A1 and reach your IELTS/OET target.",
+    "cta": "Start practicing"
+  },
+  "practice": {
+    "title": "Practice",
+    "subtitle": "Pick an activity for the active profile."
+  }
+}

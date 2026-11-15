@@ -54,10 +54,12 @@ sudah memberi nilai di minggu pertama.
 ## Status
 
 - [x] Scaffold: migrations, sqlc queries, rating, SRS, contoh konten A1, docs.
-- [ ] `cmd/seed` + validator + `cmd/tts`.
-- [ ] HTTP API + handler.
-- [ ] Frontend PWA (`web/`).
-- [ ] Nix flake.
+- [x] Monorepo Bun workspaces: `apps/api`, `apps/web`, `packages/*`.
+- [x] Frontend PWA skeleton: Next.js static export, i18n `id`/`en`, manifest + service worker.
+- [x] Nix flake dev shell, `docker-compose.yml`, `Dockerfile` (satu image).
+- [x] API contract OpenAPI + client TS generated (orval).
+- [ ] HTTP API `/api/v1` + handler (server Go saat ini hanya `healthz` + static export).
+- [ ] `apps/api/cmd/seed` + validator + `apps/api/cmd/tts`.
 - [ ] River + integrasi AI.
 - [ ] Konten A1 lengkap (unit 1, 3-16 + 2 checkpoint set + placement).
 

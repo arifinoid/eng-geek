@@ -18,9 +18,12 @@ Query ditulis sebagai SQL dengan annotation `sqlc`, digenerate jadi tipe Go. Mig
 pakai `goose` dengan anotasi `-- +goose Up/Down`. Alasan: schema dan query remain sumber
 kebenaran, hindari ORM magic.
 
-## D-004: Frontend TypeScript PWA (React + Vite)
+## D-004: Frontend TypeScript PWA (Next.js static export)
 
-Dipakai di phone dan desktop, installable. Effekts.ts jadi opsi, bukan keharusan.
+Next.js 16 App Router dengan `output: export`, next-intl (`id` default, `en`), Tailwind 4,
+Serwist untuk service worker. Dipakai di phone dan desktop, installable, offline-ready.
+Static export dipilih supaya tidak perlu runtime Node di produksi: server Go yang sajikan
+file statis.
 
 ## D-005: Dua profil, shared core + role pack
 
@@ -84,6 +87,30 @@ Alasan: preferensi user.
 `CLAUDE.md` singkat sebagai indeks + gate; detail per topik di `docs/` (architecture,
 domain, content, roadmap, decisions). Alasan: CLAUDE.md yang gemuk anti-pattern; docs
 bisa tumbuh tanpa membebani konteks Claude Code.
+
+## D-017: Monorepo Bun workspaces
+
+Satu repo: `apps/api` (Go module), `apps/web` (Next.js), `packages/*` (api-contract,
+api-client, tsconfig). Root `package.json` punya workspace scripts (`dev:*`, `build:web`,
+`test:*`). Alasan: satu lockfile TypeScript, kontrak API dipakai bersama, dan riwayat git
+untuk backend + frontend menyatu.
+
+## D-018: API contract dulu (OpenAPI), client digenerate
+
+Kontrak di `packages/api-contract/openapi.yaml`. TS client digenerate via orval ke
+`packages/api-client`; server Go memakai tipe dari `oapi-codegen`. Alasan: frontend dan
+backend tidak drift, dan URL/field punya satu sumber kebenaran.
+
+## D-019: Satu Docker image
+
+Image produksi berisi binary Go + static export (`apps/web/out`). Server Go melayani
+`/api/v1` dan file statis, dengan `STATIC_DIR` menunjuk ke hasil export. Alasan: deploy
+satu container, tanpa Node runtime, dan PWA tetap offline.
+
+## D-020: UI bahasa Indonesia (default) + Inggris
+
+`next-intl` dengan locale `id` (default) dan `en`. Alasan: pemilik aplikasi berbahasa
+Indonesia, tapi konten belajar dan kode tetap Inggris.
 
 ## Open decisions
 

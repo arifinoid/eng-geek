@@ -52,6 +52,17 @@ Or build the whole thing as one image:
 docker compose up --build
 ```
 
+## Deploy (VPS)
+
+The production deploy is native NixOS (no Docker) at
+`https://enggeek.arifinoid.web.id`: a Go systemd service on `127.0.0.1:8083`
+plus nginx serving the static export and proxying `/api/v1`. See
+[`deploy/vps/README.md`](deploy/vps/README.md) and run:
+
+```bash
+bash deploy/vps/deploy.sh
+```
+
 ## Documents
 
 - `CLAUDE.md` — guidance for Claude Code

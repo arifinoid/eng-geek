@@ -194,6 +194,110 @@ export interface Dashboard {
   next_activities: NextActivity[];
 }
 
+export interface AssessmentScores {
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  listening: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  reading: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  writing: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  speaking: number;
+}
+
+export type AssessmentRequestKind = typeof AssessmentRequestKind[keyof typeof AssessmentRequestKind];
+
+
+export const AssessmentRequestKind = {
+  checkpoint: 'checkpoint',
+  placement: 'placement',
+} as const;
+
+export interface AssessmentRequest {
+  profileId: number;
+  levelCode: string;
+  kind: AssessmentRequestKind;
+  scores: AssessmentScores;
+}
+
+export type AssessmentKind = typeof AssessmentKind[keyof typeof AssessmentKind];
+
+
+export const AssessmentKind = {
+  checkpoint: 'checkpoint',
+  placement: 'placement',
+} as const;
+
+/**
+ * The four skill scores as recorded.
+ */
+export type AssessmentScoresProperty = { [key: string]: unknown };
+
+export interface Assessment {
+  id: number;
+  profile_id: number;
+  level_code: string;
+  kind: AssessmentKind;
+  /** The four skill scores as recorded. */
+  scores: AssessmentScoresProperty;
+  overall: number;
+  created_at: string;
+}
+
+export type GateMinSkill = typeof GateMinSkill[keyof typeof GateMinSkill];
+
+
+export const GateMinSkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+export type GateRatings = {[key: string]: number};
+
+export interface Gate {
+  level: string;
+  passed: boolean;
+  /** Human-readable reasons the gate is not met; empty when it passes. */
+  reasons: string[];
+  completion_total: number;
+  completion_done: number;
+  completion_ratio: number;
+  /**
+     * The latest checkpoint overall for the level, if any.
+     * @nullable
+     */
+  checkpoint_overall: number | null;
+  min_skill: GateMinSkill;
+  min_rating: number;
+  ratings: GateRatings;
+  /**
+     * The level after this one; null at C2.
+     * @nullable
+     */
+  next_level: string | null;
+}
+
+export interface CreateAssessmentResponse {
+  assessment: Assessment;
+  gate: Gate;
+  /** Whether recording this checkpoint completed the level. */
+  level_completed: boolean;
+}
+
 /**
  * Not found
  */
@@ -216,5 +320,15 @@ export type ListUnitsParams = {
 export type GetDashboardParams = {
   /** Weekly study-minute buckets to return. Defaults to 8. */
   weeks?: number;
+};
+
+export type GetGateParams = {
+  /** Level code such as A1. Defaults to the profile's current level. */
+  level?: string;
+};
+
+export type ListAssessmentsParams = {
+  /** Maximum number of assessments to return. Defaults to 20, capped at 100. */
+  limit?: number;
 };
 

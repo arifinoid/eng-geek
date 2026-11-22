@@ -26,11 +26,17 @@ import type {
 
 import type {
   Activity,
+  Assessment,
+  AssessmentRequest,
   Attempt,
   AttemptRequest,
   BadRequestResponse,
+  CreateAssessmentResponse,
   Dashboard,
+  Gate,
   GetDashboardParams,
+  GetGateParams,
+  ListAssessmentsParams,
   ListProfilesParams,
   ListUnitsParams,
   NotFoundResponse,
@@ -853,6 +859,410 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
 
 
 
+
+export type getGateResponse200 = {
+  data: Gate
+  status: 200
+}
+
+export type getGateResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getGateResponseSuccess = (getGateResponse200) & {
+  headers: Headers;
+};
+export type getGateResponseError = (getGateResponse404) & {
+  headers: Headers;
+};
+
+export type getGateResponse = (getGateResponseSuccess | getGateResponseError)
+
+export const getGetGateUrl = (profileId: number,
+    params?: GetGateParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/profiles/${profileId}/gate?${stringifiedParams}` : `/profiles/${profileId}/gate`
+}
+
+/**
+ * Reports completion, checkpoint and skill ratings for a level. Without the level query parameter it uses the profile's current level.
+ * @summary Level gate status for a profile
+ */
+export const getGate = async (profileId: number,
+    params?: GetGateParams, options?: RequestInit): Promise<getGateResponse> => {
+
+  const res = await fetch(getGetGateUrl(profileId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getGateResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getGateResponse
+}
+
+
+
+
+
+export const getGetGateQueryKey = (profileId: number,
+    params?: GetGateParams,) => {
+    return [
+    `/profiles/${profileId}/gate`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetGateQueryOptions = <TData = Awaited<ReturnType<typeof getGate>>, TError = NotFoundResponse>(profileId: number,
+    params?: GetGateParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGateQueryKey(profileId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGate>>> = ({ signal }) => getGate(profileId,params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGateQueryResult = NonNullable<Awaited<ReturnType<typeof getGate>>>
+export type GetGateQueryError = NotFoundResponse
+
+
+/**
+ * Reports completion, checkpoint and skill ratings for a level. Without the level query parameter it uses the profile's current level.
+ * @summary Level gate status for a profile
+ */
+export function useGetGate<TData = Awaited<ReturnType<typeof getGate>>, TError = NotFoundResponse>(
+ profileId: number,
+    params: undefined |  GetGateParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGate>>,
+          TError,
+          Awaited<ReturnType<typeof getGate>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Reports completion, checkpoint and skill ratings for a level. Without the level query parameter it uses the profile's current level.
+ * @summary Level gate status for a profile
+ */
+export function useGetGate<TData = Awaited<ReturnType<typeof getGate>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetGateParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGate>>,
+          TError,
+          Awaited<ReturnType<typeof getGate>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Reports completion, checkpoint and skill ratings for a level. Without the level query parameter it uses the profile's current level.
+ * @summary Level gate status for a profile
+ */
+export function useGetGate<TData = Awaited<ReturnType<typeof getGate>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetGateParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * Reports completion, checkpoint and skill ratings for a level. Without the level query parameter it uses the profile's current level.
+ * @summary Level gate status for a profile
+ */
+export function useGetGate<TData = Awaited<ReturnType<typeof getGate>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetGateParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGate>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGateQueryOptions(profileId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listAssessmentsResponse200 = {
+  data: Assessment[]
+  status: 200
+}
+
+export type listAssessmentsResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type listAssessmentsResponseSuccess = (listAssessmentsResponse200) & {
+  headers: Headers;
+};
+export type listAssessmentsResponseError = (listAssessmentsResponse404) & {
+  headers: Headers;
+};
+
+export type listAssessmentsResponse = (listAssessmentsResponseSuccess | listAssessmentsResponseError)
+
+export const getListAssessmentsUrl = (profileId: number,
+    params?: ListAssessmentsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/profiles/${profileId}/assessments?${stringifiedParams}` : `/profiles/${profileId}/assessments`
+}
+
+/**
+ * @summary List a profile's assessments
+ */
+export const listAssessments = async (profileId: number,
+    params?: ListAssessmentsParams, options?: RequestInit): Promise<listAssessmentsResponse> => {
+
+  const res = await fetch(getListAssessmentsUrl(profileId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listAssessmentsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listAssessmentsResponse
+}
+
+
+
+
+
+export const getListAssessmentsQueryKey = (profileId: number,
+    params?: ListAssessmentsParams,) => {
+    return [
+    `/profiles/${profileId}/assessments`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAssessmentsQueryOptions = <TData = Awaited<ReturnType<typeof listAssessments>>, TError = NotFoundResponse>(profileId: number,
+    params?: ListAssessmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssessmentsQueryKey(profileId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssessments>>> = ({ signal }) => listAssessments(profileId,params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListAssessmentsQueryResult = NonNullable<Awaited<ReturnType<typeof listAssessments>>>
+export type ListAssessmentsQueryError = NotFoundResponse
+
+
+/** @summary List a profile's assessments */
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = NotFoundResponse>(
+ profileId: number,
+    params: undefined |  ListAssessmentsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssessments>>,
+          TError,
+          Awaited<ReturnType<typeof listAssessments>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List a profile's assessments */
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: ListAssessmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listAssessments>>,
+          TError,
+          Awaited<ReturnType<typeof listAssessments>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List a profile's assessments */
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: ListAssessmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List a profile's assessments */
+export function useListAssessments<TData = Awaited<ReturnType<typeof listAssessments>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: ListAssessmentsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listAssessments>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListAssessmentsQueryOptions(profileId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createAssessmentResponse201 = {
+  data: CreateAssessmentResponse
+  status: 201
+}
+
+export type createAssessmentResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createAssessmentResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type createAssessmentResponseSuccess = (createAssessmentResponse201) & {
+  headers: Headers;
+};
+export type createAssessmentResponseError = (createAssessmentResponse400 | createAssessmentResponse404) & {
+  headers: Headers;
+};
+
+export type createAssessmentResponse = (createAssessmentResponseSuccess | createAssessmentResponseError)
+
+export const getCreateAssessmentUrl = () => {
+
+
+
+
+  return `/assessments`
+}
+
+/**
+ * A checkpoint is stored in the same transaction as the level gate it triggers, so a level cannot be completed without the assessment that justified it. A placement only records the scores and reports the gate.
+ * @summary Record a checkpoint or placement assessment
+ */
+export const createAssessment = async (assessmentRequest: AssessmentRequest, options?: RequestInit): Promise<createAssessmentResponse> => {
+
+  const res = await fetch(getCreateAssessmentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(assessmentRequest)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createAssessmentResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as createAssessmentResponse
+}
+
+
+
+
+
+export const getCreateAssessmentMutationKey = () => ['createAssessment'] as const;
+
+export const getCreateAssessmentMutationOptions = <TError = BadRequestResponse | NotFoundResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessment>>, TError,CreateAssessmentMutationVariables, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssessment>>, TError,CreateAssessmentMutationVariables, TContext> => {
+
+const mutationKey = getCreateAssessmentMutationKey();
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssessment>>, CreateAssessmentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAssessment(data,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssessmentMutationResult = NonNullable<Awaited<ReturnType<typeof createAssessment>>>
+    export type CreateAssessmentMutationBody = AssessmentRequest
+    export type CreateAssessmentMutationError = BadRequestResponse | NotFoundResponse
+    export type CreateAssessmentMutationVariables = {data: AssessmentRequest}
+
+    /**
+ * A checkpoint is stored in the same transaction as the level gate it triggers, so a level cannot be completed without the assessment that justified it. A placement only records the scores and reports the gate.
+ * @summary Record a checkpoint or placement assessment
+ */
+export const useCreateAssessment = <TError = BadRequestResponse | NotFoundResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssessment>>, TError,CreateAssessmentMutationVariables, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAssessment>>,
+        TError,
+        CreateAssessmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAssessmentMutationOptions(options), queryClient);
+    }
 
 export type createAttemptResponse201 = {
   data: Attempt

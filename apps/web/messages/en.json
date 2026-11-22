@@ -6,7 +6,8 @@
   "nav": {
     "home": "Home",
     "practice": "Practice",
-    "dashboard": "Progress"
+    "dashboard": "Progress",
+    "level": "Level"
   },
   "common": {
     "loading": "Loading…",
@@ -37,7 +38,11 @@
     "noData": "No data yet.",
     "nextUp": "Next activities",
     "noNext": "No activities left in this level.",
-    "open": "Open"
+    "open": "Open",
+    "gate": "Level gate",
+    "gateDetails": "Details & record a checkpoint",
+    "gatePassed": "Every requirement for this level is met.",
+    "gateRemaining": "{{count}} requirements unmet"
   },
   "practice": {
     "title": "Practice",
@@ -75,5 +80,29 @@
     "lines": "Lines",
     "questions": "Questions",
     "speakingNote": "AI scoring for speaking is not live yet. Practise out loud on your own."
+  },
+  "levels": {
+    "title": "Level progress",
+    "subtitle": "A1 → A2 requirements: 80% of activities done, checkpoint ≥ 70%, every rating ≥ 1000.",
+    "currentGate": "Level gate",
+    "level": "Level",
+    "current": "Current level",
+    "loading": "Loading…",
+    "loadFailed": "Could not load the data.",
+    "passed": "Every requirement for this level is met.",
+    "completion": "Completion",
+    "checkpointScore": "Checkpoint",
+    "weakestSkill": "Weakest skill",
+    "record": "Record an assessment",
+    "kind": "Kind",
+    "checkpoint": "Checkpoint",
+    "placement": "Placement",
+    "invalidLevel": "A level code is required.",
+    "invalidScores": "Every score must be between 0 and 1.",
+    "save": "Save",
+    "completed": "Level completed!",
+    "history": "Assessment history",
+    "noData": "No assessments yet.",
+    "backToDashboard": "Back to progress"
   }
 }

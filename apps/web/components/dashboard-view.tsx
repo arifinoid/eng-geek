@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { useDashboard } from "@/lib/api";
+import { useDashboard, useGate } from "@/lib/api";
 import { useSelectedProfileId } from "@/lib/use-selected-profile";
 import { ProfilePrompt } from "./profile-prompt";
 
@@ -10,6 +10,7 @@ export function DashboardView() {
   const t = useTranslations("dashboard");
   const profileId = useSelectedProfileId();
   const dashboard = useDashboard(profileId);
+  const gate = useGate(profileId);
 
   if (profileId === undefined) return <ProfilePrompt />;
   if (dashboard.isPending) {
@@ -40,6 +41,29 @@ export function DashboardView() {
           unit={t("minutes")}
         />
         <StatCard label={t("level")} value={data.level} />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">{t("gate")}</h3>
+          <Link
+            href="/levels"
+            className="text-sm text-zinc-500 transition-colors hover:text-foreground"
+          >
+            {t("gateDetails")}
+          </Link>
+        </div>
+        {gate.isPending ? (
+          <p className="text-sm text-zinc-500">{t("loading")}</p>
+        ) : gate.isError || !gate.data ? (
+          <p className="text-sm text-red-600">{t("loadFailed")}</p>
+        ) : gate.data.passed ? (
+          <p className="text-sm text-green-600 dark:text-green-500">{t("gatePassed")}</p>
+        ) : (
+          <p className="text-sm text-zinc-500">
+            {t("gateRemaining", { count: gate.data.reasons.length })}
+          </p>
+        )}
       </section>
 
       <section className="flex flex-col gap-3">

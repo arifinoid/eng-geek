@@ -31,8 +31,11 @@ apps/api/            Go module: github.com/arifinoid/eng-geek/apps/api
   db/migrations/     migrations goose (source of truth schema)
   db/queries/        query sqlc per domain
   internal/api/      handler HTTP /api/v1 (mapping request/JSON)
+  internal/assessment/ checkpoint/placement + gate atomic dalam satu transaksi
   internal/attempt/  attempt + rating update dalam satu transaksi
   internal/dashboard/ streak, waktu belajar, aktivitas berikutnya
+  internal/gate/     aturan gate level (pure)
+  internal/progress/ evaluasi + apply gate (CompleteLevel + StartLevel)
   internal/content/  parser + validator konten YAML (pure)
   internal/rating/   Elo per skill (pure, no DB)
   internal/srs/      SM-2 SRS (pure)
@@ -41,7 +44,7 @@ apps/api/            Go module: github.com/arifinoid/eng-geek/apps/api
   content/a1/        konten A1 sebagai YAML
 apps/web/            Next.js static export PWA
   app/[locale]/      routing i18n (id default, en) + halaman
-  components/        client components (header, dashboard, unit, activity runner)
+  components/        client components (header, dashboard, unit, activity runner, level gate)
   lib/               API hooks, profil aktif, parser konten aktivitas (pure)
   i18n/              next-intl routing + request config
   messages/          id.json, en.json
@@ -57,7 +60,8 @@ Dockerfile           multi-stage: web export + Go binary -> satu image
 
 - `apps/api/db/migrations/` adalah source of truth schema. `internal/store` digenerate
   oleh `sqlc generate` (dijalankan dari `apps/api`); jangan edit manual.
-- `internal/rating` dan `internal/srs` murni (tanpa DB/HTTP) supaya mudah ditest.
+- `internal/rating`, `internal/srs`, dan `internal/gate` murni (tanpa DB/HTTP) supaya
+  mudah ditest.
 - Logika domain (rating, gate, SRS) tidak boleh berada di handler HTTP.
 - Konten ada di YAML (`apps/api/content/`), bukan hard-code di Go. Seeder mengubahnya
   menjadi baris `units`, `activities`, dan `vocab_items`.
@@ -117,7 +121,9 @@ bun run seed:api                # content YAML + demo household/profiles
 API Contract: `GET /api/v1/profiles?householdId=`, `GET /api/v1/profiles/{profileId}`,
 `GET /api/v1/profiles/{profileId}/dashboard?weeks=`, `GET /api/v1/units?profileId=`,
 `GET /api/v1/units/{unitId}/activities`, `GET /api/v1/activities/{activityId}`,
-`POST /api/v1/attempts`. Response memakai DTO di `internal/api` supaya tipe enum sqlc
+`POST /api/v1/attempts`, `GET /api/v1/profiles/{profileId}/gate?level=`,
+`POST /api/v1/assessments`, `GET /api/v1/profiles/{profileId}/assessments?limit=`.
+Response memakai DTO di `internal/api` supaya tipe enum sqlc
 (mis. `NullTrack`) serialisasi sesuai kontrak (`null`/string). Mount `/api/v1/` di
 `cmd/server` tanpa method supaya routing method (GET/POST) diatur muxe API.
 

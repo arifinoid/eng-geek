@@ -6,11 +6,13 @@ from A1 to IELTS/OET B2-C1. Two profiles, shared core plus professional role pac
 ## Status
 
 API v1 serves profiles, units, activities, attempt recording (one transaction with
-the skill rating update), and the profile dashboard. Content is seeded from
-`apps/api/content/a1`. The web app covers the core loop: pick a profile, see the
-dashboard, open a unit, and answer vocab/quiz/listening activities (writing and
-speaking are placeholders until AI scoring lands). Design and domain rules live in
-`docs/`; `CLAUDE.md` is the entry point for Claude Code.
+the skill rating update), the profile dashboard, and the level gate
+(`GET /profiles/{id}/gate`, `POST /assessments`, `GET /profiles/{id}/assessments`).
+Content is seeded from `apps/api/content/a1`. The web app covers the core loop: pick a
+profile, see the dashboard, open a unit, answer vocab/quiz/listening activities (writing
+and speaking are placeholders until AI scoring lands), and track the A1 -> A2 gate with
+manual checkpoint/placement scores on `/levels`. Design and domain rules live in `docs/`;
+`CLAUDE.md` is the entry point for Claude Code.
 
 ## Stack
 

@@ -27,6 +27,25 @@ func (q *Queries) CompleteLevel(ctx context.Context, arg CompleteLevelParams) er
 	return err
 }
 
+const getLevel = `-- name: GetLevel :one
+SELECT code, position, rating_min, rating_max, ielts_band_min, ielts_band_max FROM levels WHERE code = $1
+`
+
+// Level metadata, used to validate a level code.
+func (q *Queries) GetLevel(ctx context.Context, code string) (Level, error) {
+	row := q.db.QueryRow(ctx, getLevel, code)
+	var i Level
+	err := row.Scan(
+		&i.Code,
+		&i.Position,
+		&i.RatingMin,
+		&i.RatingMax,
+		&i.IeltsBandMin,
+		&i.IeltsBandMax,
+	)
+	return i, err
+}
+
 const getLevelProgress = `-- name: GetLevelProgress :many
 SELECT lp.profile_id, lp.level_code, lp.status, lp.started_at, lp.completed_at, l.position
 FROM level_progress lp
@@ -188,6 +207,70 @@ func (q *Queries) LevelTimeSpent(ctx context.Context, arg LevelTimeSpentParams) 
 	var seconds int32
 	err := row.Scan(&seconds)
 	return seconds, err
+}
+
+const listAssessments = `-- name: ListAssessments :many
+SELECT id, profile_id, level_code, kind, scores, overall, created_at
+FROM assessments
+WHERE profile_id = $1
+ORDER BY created_at DESC
+LIMIT $2
+`
+
+type ListAssessmentsParams struct {
+	ProfileID int64 `json:"profile_id"`
+	Lim       int32 `json:"lim"`
+}
+
+// Assessment history, newest first (checkpoint and placement).
+func (q *Queries) ListAssessments(ctx context.Context, arg ListAssessmentsParams) ([]Assessment, error) {
+	rows, err := q.db.Query(ctx, listAssessments, arg.ProfileID, arg.Lim)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Assessment
+	for rows.Next() {
+		var i Assessment
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProfileID,
+			&i.LevelCode,
+			&i.Kind,
+			&i.Scores,
+			&i.Overall,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const nextLevel = `-- name: NextLevel :one
+SELECT l.code, l.position, l.rating_min, l.rating_max, l.ielts_band_min, l.ielts_band_max
+FROM levels l
+JOIN levels current ON current.code = $1
+WHERE l.position = current.position + 1
+`
+
+// The level after the given one, by position. No rows at C2.
+func (q *Queries) NextLevel(ctx context.Context, levelCode string) (Level, error) {
+	row := q.db.QueryRow(ctx, nextLevel, levelCode)
+	var i Level
+	err := row.Scan(
+		&i.Code,
+		&i.Position,
+		&i.RatingMin,
+		&i.RatingMax,
+		&i.IeltsBandMin,
+		&i.IeltsBandMax,
+	)
+	return i, err
 }
 
 const startLevel = `-- name: StartLevel :exec

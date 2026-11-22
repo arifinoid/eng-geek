@@ -8,26 +8,46 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/arifinoid/eng-geek/apps/api/internal/assessment"
 	"github.com/arifinoid/eng-geek/apps/api/internal/attempt"
 	"github.com/arifinoid/eng-geek/apps/api/internal/dashboard"
+	"github.com/arifinoid/eng-geek/apps/api/internal/gate"
+	"github.com/arifinoid/eng-geek/apps/api/internal/progress"
 	"github.com/arifinoid/eng-geek/apps/api/internal/store"
 )
 
 // Server holds the dependencies shared by the API handlers.
 type Server struct {
-	queries   *store.Queries
-	attempts  *attempt.Service
-	dashboard *dashboard.Service
-	logger    *slog.Logger
+	queries     *store.Queries
+	attempts    *attempt.Service
+	dashboard   *dashboard.Service
+	assessments *assessment.Service
+	progress    *progress.Service
+	logger      *slog.Logger
 }
 
 // NewServer builds an API server backed by the given queries and services.
-func NewServer(queries *store.Queries, attempts *attempt.Service, dashboard *dashboard.Service, logger *slog.Logger) *Server {
-	return &Server{queries: queries, attempts: attempts, dashboard: dashboard, logger: logger}
+func NewServer(
+	queries *store.Queries,
+	attempts *attempt.Service,
+	dashboard *dashboard.Service,
+	assessments *assessment.Service,
+	progressSvc *progress.Service,
+	logger *slog.Logger,
+) *Server {
+	return &Server{
+		queries:     queries,
+		attempts:    attempts,
+		dashboard:   dashboard,
+		assessments: assessments,
+		progress:    progressSvc,
+		logger:      logger,
+	}
 }
 
 // Handler returns the mux with every /api/v1 route.
@@ -40,6 +60,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/units/{unitId}/activities", s.listUnitActivities)
 	mux.HandleFunc("GET /api/v1/activities/{activityId}", s.getActivity)
 	mux.HandleFunc("POST /api/v1/attempts", s.createAttempt)
+	mux.HandleFunc("POST /api/v1/assessments", s.createAssessment)
+	mux.HandleFunc("GET /api/v1/profiles/{profileId}/assessments", s.listAssessments)
+	mux.HandleFunc("GET /api/v1/profiles/{profileId}/gate", s.getGate)
 	return mux
 }
 
@@ -260,8 +283,262 @@ func (s *Server) createAttempt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) getGate(w http.ResponseWriter, r *http.Request) {
+	id, ok := profileIDFrom(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
+		return
+	}
+
+	levelCode := r.URL.Query().Get("level")
+	if levelCode == "" {
+		current, err := s.progress.CurrentLevel(r.Context(), id)
+		switch {
+		case errors.Is(err, progress.ErrProfileNotFound):
+			writeError(w, http.StatusNotFound, "profile_not_found", "profile not found")
+			return
+		case err != nil:
+			s.logger.Error("current level", "err", err)
+			writeError(w, http.StatusInternalServerError, "internal", "could not load the level gate")
+			return
+		}
+		levelCode = current
+	}
+
+	result, next, err := s.evaluateGate(w, r, id, levelCode)
+	if err != nil {
+		return
+	}
+	writeJSON(w, http.StatusOK, newGateResponse(levelCode, result, next))
+}
+
+// evaluateGate loads the gate result and the level that follows, mapping domain
+// errors to HTTP responses.
+func (s *Server) evaluateGate(w http.ResponseWriter, r *http.Request, profileID int64, levelCode string) (gate.Result, *string, error) {
+	result, err := s.progress.Evaluate(r.Context(), profileID, levelCode)
+	switch {
+	case errors.Is(err, progress.ErrProfileNotFound):
+		writeError(w, http.StatusNotFound, "profile_not_found", "profile not found")
+		return gate.Result{}, nil, err
+	case errors.Is(err, progress.ErrLevelNotFound):
+		writeError(w, http.StatusNotFound, "level_not_found", "level not found")
+		return gate.Result{}, nil, err
+	case err != nil:
+		s.logger.Error("evaluate gate", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not load the level gate")
+		return gate.Result{}, nil, err
+	}
+
+	next, err := s.progress.NextLevel(r.Context(), levelCode)
+	if err != nil {
+		s.logger.Error("next level", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not load the level gate")
+		return gate.Result{}, nil, err
+	}
+	return result, next, nil
+}
+
+type createAssessmentRequest struct {
+	ProfileID int64            `json:"profileId"`
+	LevelCode string           `json:"levelCode"`
+	Kind      string           `json:"kind"`
+	Scores    assessmentScores `json:"scores"`
+}
+
+type assessmentScores struct {
+	Listening *float64 `json:"listening"`
+	Reading   *float64 `json:"reading"`
+	Writing   *float64 `json:"writing"`
+	Speaking  *float64 `json:"speaking"`
+}
+
+func (s *Server) createAssessment(w http.ResponseWriter, r *http.Request) {
+	var body createAssessmentRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_body", "request body must be valid JSON")
+		return
+	}
+	if body.ProfileID <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
+		return
+	}
+	if strings.TrimSpace(body.LevelCode) == "" {
+		writeError(w, http.StatusBadRequest, "invalid_level", "levelCode is required")
+		return
+	}
+	if body.Kind == "" {
+		writeError(w, http.StatusBadRequest, "invalid_kind", "kind must be checkpoint or placement")
+		return
+	}
+	if body.Scores.Listening == nil || body.Scores.Reading == nil ||
+		body.Scores.Writing == nil || body.Scores.Speaking == nil {
+		writeError(w, http.StatusBadRequest, "invalid_scores",
+			"scores must include listening, reading, writing and speaking")
+		return
+	}
+
+	result, err := s.assessments.Record(r.Context(), assessment.Request{
+		ProfileID: body.ProfileID,
+		LevelCode: body.LevelCode,
+		Kind:      body.Kind,
+		Scores: assessment.Scores{
+			Listening: *body.Scores.Listening,
+			Reading:   *body.Scores.Reading,
+			Writing:   *body.Scores.Writing,
+			Speaking:  *body.Scores.Speaking,
+		},
+	})
+	switch {
+	case errors.Is(err, assessment.ErrProfileNotFound):
+		writeError(w, http.StatusNotFound, "profile_not_found", "profile not found")
+		return
+	case errors.Is(err, assessment.ErrLevelNotFound):
+		writeError(w, http.StatusNotFound, "level_not_found", "level not found")
+		return
+	case errors.Is(err, assessment.ErrInvalidKind), errors.Is(err, assessment.ErrInvalidScores):
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	case err != nil:
+		s.logger.Error("record assessment", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not record the assessment")
+		return
+	}
+
+	next, err := s.progress.NextLevel(r.Context(), result.Assessment.LevelCode)
+	if err != nil {
+		s.logger.Error("next level", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not record the assessment")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, createAssessmentResponse{
+		Assessment:     newAssessmentResponse(result.Assessment),
+		Gate:           newGateResponse(result.Assessment.LevelCode, result.Gate, next),
+		LevelCompleted: result.LevelCompleted,
+	})
+}
+
+func (s *Server) listAssessments(w http.ResponseWriter, r *http.Request) {
+	id, ok := profileIDFrom(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
+		return
+	}
+	limit, ok := limitFrom(r, defaultAssessmentLimit, maxAssessmentLimit)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_limit", "limit must be a positive integer up to 100")
+		return
+	}
+
+	assessments, err := s.assessments.List(r.Context(), id, limit)
+	switch {
+	case errors.Is(err, assessment.ErrProfileNotFound):
+		writeError(w, http.StatusNotFound, "profile_not_found", "profile not found")
+		return
+	case err != nil:
+		s.logger.Error("list assessments", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not list assessments")
+		return
+	}
+
+	response := make([]assessmentResponse, 0, len(assessments))
+	for _, item := range assessments {
+		response = append(response, newAssessmentResponse(item))
+	}
+	writeJSON(w, http.StatusOK, response)
+}
+
+const (
+	defaultAssessmentLimit int32 = 20
+	maxAssessmentLimit     int32 = 100
+)
+
+// assessmentResponse is the JSON shape of an assessment, matching the contract.
+// Scores are passed through as stored so the four skill keys stay untouched.
+type assessmentResponse struct {
+	ID        int64           `json:"id"`
+	ProfileID int64           `json:"profile_id"`
+	LevelCode string          `json:"level_code"`
+	Kind      string          `json:"kind"`
+	Scores    json.RawMessage `json:"scores"`
+	Overall   float64         `json:"overall"`
+	CreatedAt string          `json:"created_at"`
+}
+
+func newAssessmentResponse(item store.Assessment) assessmentResponse {
+	overall, _ := item.Overall.Float64Value()
+	return assessmentResponse{
+		ID:        item.ID,
+		ProfileID: item.ProfileID,
+		LevelCode: item.LevelCode,
+		Kind:      string(item.Kind),
+		Scores:    json.RawMessage(item.Scores),
+		Overall:   overall.Float64,
+		CreatedAt: item.CreatedAt.Time.Format(time.RFC3339),
+	}
+}
+
+type createAssessmentResponse struct {
+	Assessment     assessmentResponse `json:"assessment"`
+	Gate           gateResponse       `json:"gate"`
+	LevelCompleted bool               `json:"level_completed"`
+}
+
+// gateResponse is the JSON shape of the level gate, matching the contract.
+type gateResponse struct {
+	Level             string             `json:"level"`
+	Passed            bool               `json:"passed"`
+	Reasons           []string           `json:"reasons"`
+	CompletionTotal   int                `json:"completion_total"`
+	CompletionDone    int                `json:"completion_done"`
+	CompletionRatio   float64            `json:"completion_ratio"`
+	CheckpointOverall *float64           `json:"checkpoint_overall"`
+	MinSkill          string             `json:"min_skill"`
+	MinRating         float64            `json:"min_rating"`
+	Ratings           map[string]float64 `json:"ratings"`
+	NextLevel         *string            `json:"next_level"`
+}
+
+func newGateResponse(level string, result gate.Result, next *string) gateResponse {
+	reasons := result.Reasons
+	if reasons == nil {
+		reasons = []string{}
+	}
+	ratings := result.Ratings
+	if ratings == nil {
+		ratings = map[string]float64{}
+	}
+	return gateResponse{
+		Level:             level,
+		Passed:            result.Passed,
+		Reasons:           reasons,
+		CompletionTotal:   result.CompletionTotal,
+		CompletionDone:    result.CompletionDone,
+		CompletionRatio:   result.CompletionRatio,
+		CheckpointOverall: result.CheckpointOverall,
+		MinSkill:          result.MinSkill,
+		MinRating:         result.MinRating,
+		Ratings:           ratings,
+		NextLevel:         next,
+	}
+}
+
 func profileIDFrom(r *http.Request) (int64, bool) {
 	return int64PathValue(r, "profileId")
+}
+
+func limitFrom(r *http.Request, fallback, max int32) (int32, bool) {
+	raw := r.URL.Query().Get("limit")
+	if raw == "" {
+		return fallback, true
+	}
+	limit, err := strconv.ParseInt(raw, 10, 32)
+	if err != nil || limit <= 0 || limit > int64(max) {
+		return 0, false
+	}
+	return int32(limit), true
 }
 
 func int64PathValue(r *http.Request, name string) (int64, bool) {

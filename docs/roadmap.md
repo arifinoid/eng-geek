@@ -62,6 +62,7 @@ sudah memberi nilai di minggu pertama.
 - [x] `apps/api/cmd/seed` + validator (`internal/content`) + data awal household/profil.
 - [x] Attempt + rating: `POST /api/v1/attempts` satu transaksi (Elo, `rating_events`, level + SRS).
 - [x] Dashboard `GET /api/v1/profiles/{id}/dashboard`: streak, menit mingguan, rating, aktivitas berikutnya.
+- [x] Web dashboard + latihan: profile picker, dashboard, daftar unit, activity runner (vocab/quiz/listening dinilai di client; writing/speaking tampil "coming soon").
 - [ ] Gate A1->A2 + checkpoint/placement (`CompleteLevel` + `StartLevel`).
 - [ ] `apps/api/cmd/tts`.
 - [ ] River + integrasi AI.

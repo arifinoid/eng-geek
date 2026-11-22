@@ -40,7 +40,9 @@ apps/api/            Go module: github.com/arifinoid/eng-geek/apps/api
   internal/config/   env config (PORT, DATABASE_URL, STATIC_DIR)
   content/a1/        konten A1 sebagai YAML
 apps/web/            Next.js static export PWA
-  app/[locale]/      routing i18n (id default, en)
+  app/[locale]/      routing i18n (id default, en) + halaman
+  components/        client components (header, dashboard, unit, activity runner)
+  lib/               API hooks, profil aktif, parser konten aktivitas (pure)
   i18n/              next-intl routing + request config
   messages/          id.json, en.json
 packages/api-contract/  OpenAPI 3.1
@@ -63,7 +65,13 @@ Dockerfile           multi-stage: web export + Go binary -> satu image
   ditulis di `packages/api-contract/openapi.yaml`, lalu client TS digenerate ke
   `packages/api-client` (orval) dan server Go memakai tipe dari `oapi-codegen`.
 - Satu Docker image: server Go melayani `/api/v1` dan file statis dari `apps/web/out`
-  (hasil `bun run build:web`). `STATIC_DIR` menunjuk ke direktori export.
+  (hasil `bun run build:web`). `STATIC_DIR` menunjuk ke direktori export (default
+  `../web/out`, dihitung dari `apps/api` tempat server dijalankan).
+- Halaman web memakai query string (`/practice/units?id=`, `/practice/activities?id=`)
+  bukan segment `[id]`, karena `output: export` menuntut `generateStaticParams` untuk
+  segment dinamis dan isinya berasal dari DB. Profil aktif disimpan di `localStorage`
+  (`eng-geek.profileId`), bukan di URL. `next dev` mem-proxy `/api/v1/*` ke server Go
+  lewat `rewrites` di `next.config.ts` karena base URL client relatif.
 
 ## Data model (ringkas)
 
@@ -108,6 +116,7 @@ bun run seed:api                # content YAML + demo household/profiles
 
 API Contract: `GET /api/v1/profiles?householdId=`, `GET /api/v1/profiles/{profileId}`,
 `GET /api/v1/profiles/{profileId}/dashboard?weeks=`, `GET /api/v1/units?profileId=`,
+`GET /api/v1/units/{unitId}/activities`, `GET /api/v1/activities/{activityId}`,
 `POST /api/v1/attempts`. Response memakai DTO di `internal/api` supaya tipe enum sqlc
 (mis. `NullTrack`) serialisasi sesuai kontrak (`null`/string). Mount `/api/v1/` di
 `cmd/server` tanpa method supaya routing method (GET/POST) diatur muxe API.

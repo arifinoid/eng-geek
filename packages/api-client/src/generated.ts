@@ -25,6 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  Activity,
   Attempt,
   AttemptRequest,
   BadRequestResponse,
@@ -445,6 +446,260 @@ export function useListUnits<TData = Awaited<ReturnType<typeof listUnits>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListUnitsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type listUnitActivitiesResponse200 = {
+  data: Activity[]
+  status: 200
+}
+
+export type listUnitActivitiesResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type listUnitActivitiesResponseSuccess = (listUnitActivitiesResponse200) & {
+  headers: Headers;
+};
+export type listUnitActivitiesResponseError = (listUnitActivitiesResponse404) & {
+  headers: Headers;
+};
+
+export type listUnitActivitiesResponse = (listUnitActivitiesResponseSuccess | listUnitActivitiesResponseError)
+
+export const getListUnitActivitiesUrl = (unitId: number,) => {
+
+
+
+
+  return `/units/${unitId}/activities`
+}
+
+/**
+ * @summary List activities in a unit
+ */
+export const listUnitActivities = async (unitId: number, options?: RequestInit): Promise<listUnitActivitiesResponse> => {
+
+  const res = await fetch(getListUnitActivitiesUrl(unitId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listUnitActivitiesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listUnitActivitiesResponse
+}
+
+
+
+
+
+export const getListUnitActivitiesQueryKey = (unitId: number,) => {
+    return [
+    `/units/${unitId}/activities`
+    ] as const;
+    }
+
+
+export const getListUnitActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listUnitActivities>>, TError = NotFoundResponse>(unitId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListUnitActivitiesQueryKey(unitId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUnitActivities>>> = ({ signal }) => listUnitActivities(unitId, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: unitId !== null && unitId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListUnitActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listUnitActivities>>>
+export type ListUnitActivitiesQueryError = NotFoundResponse
+
+
+/** @summary List activities in a unit */
+export function useListUnitActivities<TData = Awaited<ReturnType<typeof listUnitActivities>>, TError = NotFoundResponse>(
+ unitId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUnitActivities>>,
+          TError,
+          Awaited<ReturnType<typeof listUnitActivities>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List activities in a unit */
+export function useListUnitActivities<TData = Awaited<ReturnType<typeof listUnitActivities>>, TError = NotFoundResponse>(
+ unitId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listUnitActivities>>,
+          TError,
+          Awaited<ReturnType<typeof listUnitActivities>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List activities in a unit */
+export function useListUnitActivities<TData = Awaited<ReturnType<typeof listUnitActivities>>, TError = NotFoundResponse>(
+ unitId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary List activities in a unit */
+export function useListUnitActivities<TData = Awaited<ReturnType<typeof listUnitActivities>>, TError = NotFoundResponse>(
+ unitId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listUnitActivities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListUnitActivitiesQueryOptions(unitId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type getActivityResponse200 = {
+  data: Activity
+  status: 200
+}
+
+export type getActivityResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getActivityResponseSuccess = (getActivityResponse200) & {
+  headers: Headers;
+};
+export type getActivityResponseError = (getActivityResponse404) & {
+  headers: Headers;
+};
+
+export type getActivityResponse = (getActivityResponseSuccess | getActivityResponseError)
+
+export const getGetActivityUrl = (activityId: number,) => {
+
+
+
+
+  return `/activities/${activityId}`
+}
+
+/**
+ * @summary Get one activity with its content
+ */
+export const getActivity = async (activityId: number, options?: RequestInit): Promise<getActivityResponse> => {
+
+  const res = await fetch(getGetActivityUrl(activityId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getActivityResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getActivityResponse
+}
+
+
+
+
+
+export const getGetActivityQueryKey = (activityId: number,) => {
+    return [
+    `/activities/${activityId}`
+    ] as const;
+    }
+
+
+export const getGetActivityQueryOptions = <TData = Awaited<ReturnType<typeof getActivity>>, TError = NotFoundResponse>(activityId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActivityQueryKey(activityId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActivity>>> = ({ signal }) => getActivity(activityId, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: activityId !== null && activityId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getActivity>>>
+export type GetActivityQueryError = NotFoundResponse
+
+
+/** @summary Get one activity with its content */
+export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, TError = NotFoundResponse>(
+ activityId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActivity>>,
+          TError,
+          Awaited<ReturnType<typeof getActivity>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get one activity with its content */
+export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, TError = NotFoundResponse>(
+ activityId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActivity>>,
+          TError,
+          Awaited<ReturnType<typeof getActivity>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get one activity with its content */
+export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, TError = NotFoundResponse>(
+ activityId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Get one activity with its content */
+export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, TError = NotFoundResponse>(
+ activityId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActivity>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetActivityQueryOptions(activityId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

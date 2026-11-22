@@ -8,13 +8,72 @@
     "practice": "Latihan",
     "dashboard": "Progres"
   },
+  "common": {
+    "loading": "Memuat…",
+    "needProfile": "Pilih profil dulu di beranda.",
+    "goHome": "Pilih profil"
+  },
   "home": {
     "title": "Selamat datang di eng-geek",
     "subtitle": "Mulai dari A1, capai target IELTS/OET kamu.",
-    "cta": "Mulai latihan"
+    "cta": "Mulai latihan",
+    "pickProfile": "Pilih profil untuk mulai",
+    "loadingProfiles": "Memuat profil…",
+    "loadFailed": "Gagal memuat profil.",
+    "noProfiles": "Belum ada profil. Jalankan seeder API terlebih dahulu."
+  },
+  "dashboard": {
+    "title": "Progres",
+    "loading": "Memuat progres…",
+    "loadFailed": "Gagal memuat progres.",
+    "streak": "Streak",
+    "days": "hari",
+    "weekMinutes": "Menit minggu ini",
+    "minutes": "menit",
+    "level": "Level",
+    "skills": "Rating keterampilan",
+    "attempts": "percobaan",
+    "weeklyMinutes": "Menit belajar per minggu",
+    "noData": "Belum ada data.",
+    "nextUp": "Aktivitas berikutnya",
+    "noNext": "Tidak ada aktivitas tersisa di level ini.",
+    "open": "Buka"
   },
   "practice": {
     "title": "Latihan",
-    "subtitle": "Pilih aktivitas untuk profil aktif."
+    "subtitle": "Pilih unit untuk profil aktif.",
+    "loading": "Memuat unit…",
+    "loadFailed": "Gagal memuat unit.",
+    "noUnits": "Belum ada unit untuk profil ini."
+  },
+  "unit": {
+    "title": "Unit",
+    "loading": "Memuat aktivitas…",
+    "loadFailed": "Gagal memuat aktivitas.",
+    "invalidUnit": "Unit tidak valid.",
+    "backToUnits": "Semua unit",
+    "noActivities": "Unit ini belum memiliki aktivitas."
+  },
+  "activity": {
+    "title": "Aktivitas",
+    "loading": "Memuat aktivitas…",
+    "loadFailed": "Gagal memuat aktivitas.",
+    "invalidActivity": "Aktivitas tidak valid.",
+    "backToUnit": "Kembali ke unit",
+    "unsupported": "Tipe aktivitas ini belum bisa ditampilkan.",
+    "script": "Transkrip",
+    "audioPending": "Audio belum dibuat. Baca transkripnya dulu.",
+    "check": "Periksa",
+    "result": "Hasil",
+    "score": "Skor",
+    "ratingDelta": "Perubahan rating",
+    "writingTitle": "Menulis",
+    "minWords": "Jumlah kata minimum",
+    "modelAnswer": "Contoh jawaban",
+    "writingNote": "Penilaian tulisan oleh AI belum aktif. Kerjakan dulu, lalu simpan hasilmu sendiri.",
+    "speakingTitle": "Berbicara",
+    "lines": "Kalimat",
+    "questions": "Pertanyaan",
+    "speakingNote": "Penilaian suara oleh AI belum aktif. Latihlah lisan kamu secara mandiri."
   }
 }

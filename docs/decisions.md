@@ -148,6 +148,19 @@ terakhir adalah kemarin, jadi belum belajar hari ini tidak menghapus streak.
 mingguan (default 8, maks 52). Alasan: aturan streak harus eksplisit dan bisa dites
 tanpa DB, jadi `Streak` murni dan `weekly_minutes` dihitung dari bucket.
 
+## D-025: Web dashboard + latihan di atas client API yang tipis
+
+`apps/web` memakai hook wrapper di `lib/api.ts` di atas client orval: wrapper membuka
+envelope `{data, status, headers}` dan melempar Error untuk status non-sukses, jadi
+komponen hanya melihat payload. Halaman memakai query string (`?id=`) karena static
+export tidak mengizinkan segment dinamis tanpa `generateStaticParams`, dan profil aktif
+disimpan di `localStorage` supaya URL tetap bersih. Activity `vocab`/`quiz`/`listening`
+dinilai di client (skor = jumlah jawaban benar / jumlah soal) lalu dikirim ke
+`POST /api/v1/attempts`, sehingga rating tetap dihitung di server. `writing` dan
+`speaking` hanya menampilkan prompt + catatan "coming soon" karena penilaian AI belum
+ada. Alasan: satu sumber kebenaran untuk rating (server), dan UI bisa dipakai hari ini
+tanpa menunggu AI.
+
 ## Open decisions
 
 - Gate A2->B1 dan seterusnya: sementara reuse pola 80% / 70% / next-level-min.

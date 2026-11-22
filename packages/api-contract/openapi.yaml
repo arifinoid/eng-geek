@@ -75,6 +75,50 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Unit"
+  /units/{unitId}/activities:
+    get:
+      operationId: listUnitActivities
+      tags: [content]
+      summary: List activities in a unit
+      parameters:
+        - name: unitId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Activities in the unit, ordered by position
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /activities/{activityId}:
+    get:
+      operationId: getActivity
+      tags: [content]
+      summary: Get one activity with its content
+      parameters:
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: The activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /profiles/{profileId}/dashboard:
     get:
       operationId: getDashboard
@@ -189,6 +233,30 @@ components:
         position:
           type: integer
       required: [id, level_code, title, position]
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        unit_id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [quiz, vocab, writing, speaking, listening]
+        skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        difficulty:
+          type: integer
+        position:
+          type: integer
+        content:
+          type: object
+          additionalProperties: true
+          description: One shape per type; see docs/content.md.
+      required: [id, unit_id, type, skill, difficulty, position, content]
     AttemptRequest:
       type: object
       properties:

@@ -37,6 +37,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/v1/profiles/{profileId}", s.getProfile)
 	mux.HandleFunc("GET /api/v1/profiles/{profileId}/dashboard", s.getDashboard)
 	mux.HandleFunc("GET /api/v1/units", s.listUnits)
+	mux.HandleFunc("GET /api/v1/units/{unitId}/activities", s.listUnitActivities)
+	mux.HandleFunc("GET /api/v1/activities/{activityId}", s.getActivity)
 	mux.HandleFunc("POST /api/v1/attempts", s.createAttempt)
 	return mux
 }
@@ -138,6 +140,71 @@ func (s *Server) listUnits(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+func (s *Server) listUnitActivities(w http.ResponseWriter, r *http.Request) {
+	unitID, ok := int64PathValue(r, "unitId")
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_unit_id", "unitId must be a positive integer")
+		return
+	}
+
+	activities, err := s.queries.ListActivitiesByUnit(r.Context(), unitID)
+	if err != nil {
+		s.logger.Error("list activities", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not list activities")
+		return
+	}
+
+	response := make([]activityResponse, 0, len(activities))
+	for _, activity := range activities {
+		response = append(response, newActivityResponse(activity))
+	}
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (s *Server) getActivity(w http.ResponseWriter, r *http.Request) {
+	id, ok := int64PathValue(r, "activityId")
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_activity_id", "activityId must be a positive integer")
+		return
+	}
+
+	activity, err := s.queries.GetActivity(r.Context(), id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		writeError(w, http.StatusNotFound, "not_found", "activity not found")
+		return
+	}
+	if err != nil {
+		s.logger.Error("get activity", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not get activity")
+		return
+	}
+	writeJSON(w, http.StatusOK, newActivityResponse(activity))
+}
+
+// activityResponse carries the activity content as raw JSON, exactly as it is
+// stored, so the frontend can render one shape per activity type.
+type activityResponse struct {
+	ID         int64           `json:"id"`
+	UnitID     int64           `json:"unit_id"`
+	Type       string          `json:"type"`
+	Skill      string          `json:"skill"`
+	Difficulty int32           `json:"difficulty"`
+	Position   int32           `json:"position"`
+	Content    json.RawMessage `json:"content"`
+}
+
+func newActivityResponse(activity store.Activity) activityResponse {
+	return activityResponse{
+		ID:         activity.ID,
+		UnitID:     activity.UnitID,
+		Type:       string(activity.Type),
+		Skill:      string(activity.Skill),
+		Difficulty: activity.Difficulty,
+		Position:   activity.Position,
+		Content:    json.RawMessage(activity.Content),
+	}
+}
+
 type createAttemptRequest struct {
 	ProfileID   int64           `json:"profileId"`
 	ActivityID  int64           `json:"activityId"`
@@ -194,7 +261,11 @@ func (s *Server) createAttempt(w http.ResponseWriter, r *http.Request) {
 }
 
 func profileIDFrom(r *http.Request) (int64, bool) {
-	id, err := strconv.ParseInt(r.PathValue("profileId"), 10, 64)
+	return int64PathValue(r, "profileId")
+}
+
+func int64PathValue(r *http.Request, name string) (int64, bool) {
+	id, err := strconv.ParseInt(r.PathValue(name), 10, 64)
 	if err != nil || id <= 0 {
 		return 0, false
 	}

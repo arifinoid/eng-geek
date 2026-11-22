@@ -55,6 +55,43 @@ export interface Unit {
   position: number;
 }
 
+export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+
+
+export const ActivityType = {
+  quiz: 'quiz',
+  vocab: 'vocab',
+  writing: 'writing',
+  speaking: 'speaking',
+  listening: 'listening',
+} as const;
+
+export type ActivitySkill = typeof ActivitySkill[keyof typeof ActivitySkill];
+
+
+export const ActivitySkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+/**
+ * One shape per type; see docs/content.md.
+ */
+export type ActivityContent = { [key: string]: unknown };
+
+export interface Activity {
+  id: number;
+  unit_id: number;
+  type: ActivityType;
+  skill: ActivitySkill;
+  difficulty: number;
+  position: number;
+  /** One shape per type; see docs/content.md. */
+  content: ActivityContent;
+}
+
 export interface AttemptRequest {
   profileId: number;
   activityId: number;

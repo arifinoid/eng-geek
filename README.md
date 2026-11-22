@@ -5,10 +5,12 @@ from A1 to IELTS/OET B2-C1. Two profiles, shared core plus professional role pac
 
 ## Status
 
-API v1 serves profiles, units, attempt recording (one transaction with the skill
-rating update), and the profile dashboard. Content is seeded from
-`apps/api/content/a1`; the web app is still a PWA skeleton. Design and domain rules
-live in `docs/`; `CLAUDE.md` is the entry point for Claude Code.
+API v1 serves profiles, units, activities, attempt recording (one transaction with
+the skill rating update), and the profile dashboard. Content is seeded from
+`apps/api/content/a1`. The web app covers the core loop: pick a profile, see the
+dashboard, open a unit, and answer vocab/quiz/listening activities (writing and
+speaking are placeholders until AI scoring lands). Design and domain rules live in
+`docs/`; `CLAUDE.md` is the entry point for Claude Code.
 
 ## Stack
 

@@ -31,6 +31,8 @@ apps/api/            Go module: github.com/arifinoid/eng-geek/apps/api
   db/migrations/     migrations goose (source of truth schema)
   db/queries/        query sqlc per domain
   internal/api/      handler HTTP /api/v1 (mapping request/JSON)
+  internal/attempt/  attempt + rating update dalam satu transaksi
+  internal/dashboard/ streak, waktu belajar, aktivitas berikutnya
   internal/content/  parser + validator konten YAML (pure)
   internal/rating/   Elo per skill (pure, no DB)
   internal/srs/      SM-2 SRS (pure)
@@ -105,5 +107,10 @@ bun run seed:api                # content YAML + demo household/profiles
 ```
 
 API Contract: `GET /api/v1/profiles?householdId=`, `GET /api/v1/profiles/{profileId}`,
-`GET /api/v1/units?profileId=`. Response memakai DTO di `internal/api` supaya tipe
-enum sqlc (mis. `NullTrack`) serialisasi sesuai kontrak (`null`/string).
+`GET /api/v1/profiles/{profileId}/dashboard?weeks=`, `GET /api/v1/units?profileId=`,
+`POST /api/v1/attempts`. Response memakai DTO di `internal/api` supaya tipe enum sqlc
+(mis. `NullTrack`) serialisasi sesuai kontrak (`null`/string). Mount `/api/v1/` di
+`cmd/server` tanpa method supaya routing method (GET/POST) diatur muxe API.
+
+Catatan sqlc: `NUMERIC` dipetakan ke `pgtype.Numeric` dan override `db_type` tidak
+berlaku di sqlc v1.31, jadi konversi angka ada di pemanggil query.

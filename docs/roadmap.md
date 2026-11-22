@@ -60,6 +60,9 @@ sudah memberi nilai di minggu pertama.
 - [x] API contract OpenAPI + client TS generated (orval).
 - [x] HTTP API `/api/v1` + handler: `profiles`, `profiles/{id}`, `units` (DTO + 400/404).
 - [x] `apps/api/cmd/seed` + validator (`internal/content`) + data awal household/profil.
+- [x] Attempt + rating: `POST /api/v1/attempts` satu transaksi (Elo, `rating_events`, level + SRS).
+- [x] Dashboard `GET /api/v1/profiles/{id}/dashboard`: streak, menit mingguan, rating, aktivitas berikutnya.
+- [ ] Gate A1->A2 + checkpoint/placement (`CompleteLevel` + `StartLevel`).
 - [ ] `apps/api/cmd/tts`.
 - [ ] River + integrasi AI.
 - [ ] Konten A1 lengkap (unit 1, 3-16 + 2 checkpoint set + placement).

@@ -31,7 +31,8 @@ ORDER BY created_at;
 
 -- Pick the next activities: weakest skill first, difficulty near the rating.
 -- name: NextActivities :many
-SELECT a.*
+SELECT a.id, a.unit_id, a.type, a.skill, a.difficulty, a.content, a.position,
+       u.title AS unit_title, u.position AS unit_position
 FROM activities a
 JOIN units u ON u.id = a.unit_id
 WHERE a.skill = @skill
@@ -48,7 +49,7 @@ LIMIT @lim;
 
 -- Weekly study minutes for the dashboard
 -- name: WeeklyStudyMinutes :many
-SELECT date_trunc('week', created_at AT TIME ZONE @tz)::date AS week_start,
+SELECT date_trunc('week', created_at AT TIME ZONE @tz::text)::date AS week_start,
        (sum(duration_sec) / 60)::int AS minutes
 FROM attempts
 WHERE profile_id = @profile_id
@@ -58,7 +59,7 @@ LIMIT @weeks;
 
 -- Streak helper: distinct study days, newest first (compute the streak in Go)
 -- name: StudyDays :many
-SELECT DISTINCT (created_at AT TIME ZONE @tz)::date AS day
+SELECT DISTINCT (created_at AT TIME ZONE @tz::text)::date AS day
 FROM attempts
 WHERE profile_id = @profile_id
 ORDER BY day DESC

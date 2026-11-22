@@ -8,21 +8,26 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/arifinoid/eng-geek/apps/api/internal/attempt"
+	"github.com/arifinoid/eng-geek/apps/api/internal/dashboard"
 	"github.com/arifinoid/eng-geek/apps/api/internal/store"
 )
 
 // Server holds the dependencies shared by the API handlers.
 type Server struct {
-	queries *store.Queries
-	logger  *slog.Logger
+	queries   *store.Queries
+	attempts  *attempt.Service
+	dashboard *dashboard.Service
+	logger    *slog.Logger
 }
 
-// NewServer builds an API server backed by the given queries.
-func NewServer(queries *store.Queries, logger *slog.Logger) *Server {
-	return &Server{queries: queries, logger: logger}
+// NewServer builds an API server backed by the given queries and services.
+func NewServer(queries *store.Queries, attempts *attempt.Service, dashboard *dashboard.Service, logger *slog.Logger) *Server {
+	return &Server{queries: queries, attempts: attempts, dashboard: dashboard, logger: logger}
 }
 
 // Handler returns the mux with every /api/v1 route.
@@ -30,7 +35,9 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/profiles", s.listProfiles)
 	mux.HandleFunc("GET /api/v1/profiles/{profileId}", s.getProfile)
+	mux.HandleFunc("GET /api/v1/profiles/{profileId}/dashboard", s.getDashboard)
 	mux.HandleFunc("GET /api/v1/units", s.listUnits)
+	mux.HandleFunc("POST /api/v1/attempts", s.createAttempt)
 	return mux
 }
 
@@ -51,12 +58,17 @@ func (s *Server) listProfiles(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "internal", "could not list profiles")
 		return
 	}
-	writeJSON(w, http.StatusOK, profiles)
+
+	response := make([]profileResponse, 0, len(profiles))
+	for _, profile := range profiles {
+		response = append(response, newProfileResponse(profile))
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (s *Server) getProfile(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseInt(r.PathValue("profileId"), 10, 64)
-	if err != nil || id <= 0 {
+	id, ok := profileIDFrom(r)
+	if !ok {
 		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
 		return
 	}
@@ -71,7 +83,33 @@ func (s *Server) getProfile(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "internal", "could not get profile")
 		return
 	}
-	writeJSON(w, http.StatusOK, profile)
+	writeJSON(w, http.StatusOK, newProfileResponse(profile))
+}
+
+func (s *Server) getDashboard(w http.ResponseWriter, r *http.Request) {
+	id, ok := profileIDFrom(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
+		return
+	}
+
+	weeks, ok := weeksFrom(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "invalid_weeks", "weeks must be a positive integer")
+		return
+	}
+
+	response, err := s.dashboard.Get(r.Context(), id, weeks)
+	if errors.Is(err, dashboard.ErrProfileNotFound) {
+		writeError(w, http.StatusNotFound, "not_found", "profile not found")
+		return
+	}
+	if err != nil {
+		s.logger.Error("get dashboard", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not load dashboard")
+		return
+	}
+	writeJSON(w, http.StatusOK, newDashboardResponse(response))
 }
 
 func (s *Server) listUnits(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +138,105 @@ func (s *Server) listUnits(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+type createAttemptRequest struct {
+	ProfileID   int64           `json:"profileId"`
+	ActivityID  int64           `json:"activityId"`
+	Score       float64         `json:"score"`
+	DurationSec int32           `json:"durationSec"`
+	Feedback    json.RawMessage `json:"feedback"`
+}
+
+func (s *Server) createAttempt(w http.ResponseWriter, r *http.Request) {
+	var body createAttemptRequest
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_body", "request body must be valid JSON")
+		return
+	}
+	if body.ProfileID <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_profile_id", "profileId must be a positive integer")
+		return
+	}
+	if body.ActivityID <= 0 {
+		writeError(w, http.StatusBadRequest, "invalid_activity_id", "activityId must be a positive integer")
+		return
+	}
+	if body.Score < 0 || body.Score > 1 {
+		writeError(w, http.StatusBadRequest, "invalid_score", "score must be between 0 and 1")
+		return
+	}
+	if body.DurationSec < 0 {
+		writeError(w, http.StatusBadRequest, "invalid_duration", "durationSec must not be negative")
+		return
+	}
+
+	result, err := s.attempts.Record(r.Context(), attempt.Request{
+		ProfileID:   body.ProfileID,
+		ActivityID:  body.ActivityID,
+		Score:       body.Score,
+		DurationSec: body.DurationSec,
+		Feedback:    body.Feedback,
+	})
+	switch {
+	case errors.Is(err, attempt.ErrProfileNotFound):
+		writeError(w, http.StatusNotFound, "profile_not_found", "profile not found")
+	case errors.Is(err, attempt.ErrActivityNotFound):
+		writeError(w, http.StatusNotFound, "activity_not_found", "activity not found")
+	case errors.Is(err, attempt.ErrInvalidScore), errors.Is(err, attempt.ErrInvalidDuration):
+		writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
+	case err != nil:
+		s.logger.Error("record attempt", "err", err)
+		writeError(w, http.StatusInternalServerError, "internal", "could not record the attempt")
+	default:
+		writeJSON(w, http.StatusCreated, newAttemptResponse(result))
+	}
+}
+
+func profileIDFrom(r *http.Request) (int64, bool) {
+	id, err := strconv.ParseInt(r.PathValue("profileId"), 10, 64)
+	if err != nil || id <= 0 {
+		return 0, false
+	}
+	return id, true
+}
+
+func weeksFrom(r *http.Request) (int32, bool) {
+	raw := r.URL.Query().Get("weeks")
+	if raw == "" {
+		return 0, true
+	}
+	weeks, err := strconv.ParseInt(raw, 10, 32)
+	if err != nil || weeks <= 0 {
+		return 0, false
+	}
+	return int32(weeks), true
+}
+
+// profileResponse is the JSON shape of a profile, matching the API contract.
+type profileResponse struct {
+	ID         int64   `json:"id"`
+	Name       string  `json:"name"`
+	Track      string  `json:"track"`
+	TargetExam string  `json:"target_exam"`
+	ExamDate   *string `json:"exam_date"`
+}
+
+func newProfileResponse(profile store.Profile) profileResponse {
+	var examDate *string
+	if profile.ExamDate.Valid {
+		value := profile.ExamDate.Time.Format("2006-01-02")
+		examDate = &value
+	}
+	return profileResponse{
+		ID:         profile.ID,
+		Name:       profile.Name,
+		Track:      string(profile.Track),
+		TargetExam: string(profile.TargetExam),
+		ExamDate:   examDate,
+	}
+}
+
 // unitResponse is the JSON shape of a unit. Track is a pointer so a shared
 // unit (NULL in the database) serializes as null, matching the API contract.
 type unitResponse struct {
@@ -122,6 +259,113 @@ func newUnitResponse(unit store.Unit) unitResponse {
 		Track:     track,
 		Title:     unit.Title,
 		Position:  unit.Position,
+	}
+}
+
+type attemptResponse struct {
+	ID           int64           `json:"id"`
+	ProfileID    int64           `json:"profile_id"`
+	ActivityID   int64           `json:"activity_id"`
+	Score        float64         `json:"score"`
+	DurationSec  int32           `json:"duration_sec"`
+	Feedback     json.RawMessage `json:"feedback"`
+	Skill        string          `json:"skill"`
+	RatingBefore float64         `json:"rating_before"`
+	RatingAfter  float64         `json:"rating_after"`
+	RatingDelta  float64         `json:"rating_delta"`
+	CreatedAt    string          `json:"created_at"`
+}
+
+func newAttemptResponse(result attempt.Result) attemptResponse {
+	return attemptResponse{
+		ID:           result.Attempt.ID,
+		ProfileID:    result.Attempt.ProfileID,
+		ActivityID:   result.Attempt.ActivityID,
+		Score:        result.Score,
+		DurationSec:  result.Attempt.DurationSec,
+		Feedback:     json.RawMessage(result.Attempt.Feedback),
+		Skill:        string(result.Skill),
+		RatingBefore: result.RatingBefore,
+		RatingAfter:  result.RatingAfter,
+		RatingDelta:  result.RatingDelta,
+		CreatedAt:    result.Attempt.CreatedAt.Time.Format(time.RFC3339),
+	}
+}
+
+type dashboardResponse struct {
+	Profile        profileResponse         `json:"profile"`
+	Level          string                  `json:"level"`
+	StreakDays     int                     `json:"streak_days"`
+	WeekMinutes    int32                   `json:"week_minutes"`
+	Skills         []skillRatingResponse   `json:"skills"`
+	WeeklyMinutes  []weeklyMinutesResponse `json:"weekly_minutes"`
+	NextActivities []nextActivityResponse  `json:"next_activities"`
+}
+
+type skillRatingResponse struct {
+	Skill         string  `json:"skill"`
+	Rating        float64 `json:"rating"`
+	Level         string  `json:"level"`
+	AttemptsCount int32   `json:"attempts_count"`
+}
+
+type weeklyMinutesResponse struct {
+	WeekStart string `json:"week_start"`
+	Minutes   int32  `json:"minutes"`
+}
+
+type nextActivityResponse struct {
+	ID           int64  `json:"id"`
+	UnitID       int64  `json:"unit_id"`
+	UnitPosition int32  `json:"unit_position"`
+	UnitTitle    string `json:"unit_title"`
+	Type         string `json:"type"`
+	Skill        string `json:"skill"`
+	Difficulty   int32  `json:"difficulty"`
+	Position     int32  `json:"position"`
+}
+
+func newDashboardResponse(response dashboard.Response) dashboardResponse {
+	skills := make([]skillRatingResponse, 0, len(response.Skills))
+	for _, skill := range response.Skills {
+		skills = append(skills, skillRatingResponse{
+			Skill:         skill.Skill,
+			Rating:        skill.Rating,
+			Level:         skill.Level,
+			AttemptsCount: skill.AttemptsCount,
+		})
+	}
+
+	weekly := make([]weeklyMinutesResponse, 0, len(response.WeeklyMinutes))
+	for _, week := range response.WeeklyMinutes {
+		weekly = append(weekly, weeklyMinutesResponse{
+			WeekStart: week.WeekStart.Format("2006-01-02"),
+			Minutes:   week.Minutes,
+		})
+	}
+
+	next := make([]nextActivityResponse, 0, len(response.NextActivities))
+	for _, activity := range response.NextActivities {
+		next = append(next, nextActivityResponse{
+			ID:           activity.ID,
+			UnitID:       activity.UnitID,
+			UnitPosition: activity.UnitPosition,
+			UnitTitle:    activity.UnitTitle,
+			Type:         activity.Type,
+			Skill:        activity.Skill,
+			Difficulty:   activity.Difficulty,
+			Position:     activity.Position,
+		})
+	}
+
+	return dashboardResponse{
+		Profile:        newProfileResponse(response.Profile),
+		Level:          response.Level,
+		StreakDays:     response.StreakDays,
+		WeekMinutes:    response.WeekMinutes,
+		Skills:         skills,
+		WeeklyMinutes:  weekly,
+		NextActivities: next,
 	}
 }
 

@@ -128,6 +128,26 @@ tidak cocok dengan kontrak (`{"track":"","valid":false}`). Handler `internal/api
 memetakan ke DTO sendiri (`track: null` atau string) supaya JSON mengikuti
 `packages/api-contract`. Alasan: kontrak API adalah sumber kebenaran frontend.
 
+## D-023: Attempt + rating satu transaksi, level & SRS aktif di attempt pertama
+
+`internal/attempt` membungkus seluruh langkah domain: insert `attempts`, lock
+`skill_ratings` `FOR UPDATE`, hitung Elo, update rating + `attempts_count`, tulis
+`rating_events`, lalu `StartLevel` dan `SeedCards` untuk level activity tersebut.
+`StartLevel` bersifat insert-only (`ON CONFLICT DO NOTHING`) supaya level yang sudah
+`completed` tidak dihidupkan lagi oleh attempt berikutnya. Kartu SRS dibuat pada
+attempt pertama di level itu, jadi review vocab langsung punya isi. Alasan: attempt
+dan rating tidak boleh pernah berbeda, dan lock mencegah race antar device.
+
+## D-024: Dashboard composition + aturan streak
+
+`internal/dashboard` menyusun streak, menit belajar mingguan, rating keempat skill,
+dan tiga aktivitas berikutnya per skill (skill terlemah lebih dulu). Streak dihitung
+dari `attempts` per hari di timezone profil; streak masih hidup kalau hari belajar
+terakhir adalah kemarin, jadi belum belajar hari ini tidak menghapus streak.
+`week_minutes` adalah menit pada minggu berjalan, `weekly_minutes` adalah bucket
+mingguan (default 8, maks 52). Alasan: aturan streak harus eksplisit dan bisa dites
+tanpa DB, jadi `Streak` murni dan `weekly_minutes` dihitung dari bucket.
+
 ## Open decisions
 
 - Gate A2->B1 dan seterusnya: sementara reuse pola 80% / 70% / next-level-min.

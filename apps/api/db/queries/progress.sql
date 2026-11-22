@@ -1,9 +1,9 @@
+-- Idempotent: create the level as in_progress. An existing row is left alone so
+-- a completed level is never resurrected by a later attempt in that level.
 -- name: StartLevel :exec
 INSERT INTO level_progress (profile_id, level_code, status, started_at)
 VALUES (@profile_id, @level_code, 'in_progress', now())
-ON CONFLICT (profile_id, level_code) DO UPDATE
-SET status = 'in_progress',
-    started_at = COALESCE(level_progress.started_at, now());
+ON CONFLICT (profile_id, level_code) DO NOTHING;
 
 -- name: CompleteLevel :exec
 UPDATE level_progress

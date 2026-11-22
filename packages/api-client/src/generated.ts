@@ -6,21 +6,30 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  Attempt,
+  AttemptRequest,
+  BadRequestResponse,
+  Dashboard,
+  GetDashboardParams,
   ListProfilesParams,
   ListUnitsParams,
   NotFoundResponse,
@@ -30,6 +39,26 @@ import type {
 
 
 
+
+const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | undefined>)[]) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries = source instanceof Headers
+      ? source.entries()
+      : Symbol.iterator in source
+        ? Array.from(source as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string])
+        : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<RequestInit['headers'], Record<string, unknown>>;
+};
 
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -427,4 +456,253 @@ export function useListUnits<TData = Awaited<ReturnType<typeof listUnits>>, TErr
 
 
 
+
+export type getDashboardResponse200 = {
+  data: Dashboard
+  status: 200
+}
+
+export type getDashboardResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getDashboardResponseSuccess = (getDashboardResponse200) & {
+  headers: Headers;
+};
+export type getDashboardResponseError = (getDashboardResponse404) & {
+  headers: Headers;
+};
+
+export type getDashboardResponse = (getDashboardResponseSuccess | getDashboardResponseError)
+
+export const getGetDashboardUrl = (profileId: number,
+    params?: GetDashboardParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/profiles/${profileId}/dashboard?${stringifiedParams}` : `/profiles/${profileId}/dashboard`
+}
+
+/**
+ * @summary Dashboard for a profile
+ */
+export const getDashboard = async (profileId: number,
+    params?: GetDashboardParams, options?: RequestInit): Promise<getDashboardResponse> => {
+
+  const res = await fetch(getGetDashboardUrl(profileId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getDashboardResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getDashboardResponse
+}
+
+
+
+
+
+export const getGetDashboardQueryKey = (profileId: number,
+    params?: GetDashboardParams,) => {
+    return [
+    `/profiles/${profileId}/dashboard`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getDashboard>>, TError = NotFoundResponse>(profileId: number,
+    params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardQueryKey(profileId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboard>>> = ({ signal }) => getDashboard(profileId,params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboard>>>
+export type GetDashboardQueryError = NotFoundResponse
+
+
+/** @summary Dashboard for a profile */
+export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = NotFoundResponse>(
+ profileId: number,
+    params: undefined |  GetDashboardParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof getDashboard>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Dashboard for a profile */
+export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDashboard>>,
+          TError,
+          Awaited<ReturnType<typeof getDashboard>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Dashboard for a profile */
+export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/** @summary Dashboard for a profile */
+export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = NotFoundResponse>(
+ profileId: number,
+    params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDashboardQueryOptions(profileId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export type createAttemptResponse201 = {
+  data: Attempt
+  status: 201
+}
+
+export type createAttemptResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createAttemptResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type createAttemptResponseSuccess = (createAttemptResponse201) & {
+  headers: Headers;
+};
+export type createAttemptResponseError = (createAttemptResponse400 | createAttemptResponse404) & {
+  headers: Headers;
+};
+
+export type createAttemptResponse = (createAttemptResponseSuccess | createAttemptResponseError)
+
+export const getCreateAttemptUrl = () => {
+
+
+
+
+  return `/attempts`
+}
+
+/**
+ * One transaction: stores the attempt, locks the skill rating row, applies the Elo update, writes the rating event, and activates the level of the activity.
+ * @summary Record an activity attempt
+ */
+export const createAttempt = async (attemptRequest: AttemptRequest, options?: RequestInit): Promise<createAttemptResponse> => {
+
+  const res = await fetch(getCreateAttemptUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
+    body: JSON.stringify(attemptRequest)
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createAttemptResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as createAttemptResponse
+}
+
+
+
+
+
+export const getCreateAttemptMutationKey = () => ['createAttempt'] as const;
+
+export const getCreateAttemptMutationOptions = <TError = BadRequestResponse | NotFoundResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAttempt>>, TError,CreateAttemptMutationVariables, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof createAttempt>>, TError,CreateAttemptMutationVariables, TContext> => {
+
+const mutationKey = getCreateAttemptMutationKey();
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAttempt>>, CreateAttemptMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAttempt(data,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAttemptMutationResult = NonNullable<Awaited<ReturnType<typeof createAttempt>>>
+    export type CreateAttemptMutationBody = AttemptRequest
+    export type CreateAttemptMutationError = BadRequestResponse | NotFoundResponse
+    export type CreateAttemptMutationVariables = {data: AttemptRequest}
+
+    /**
+ * One transaction: stores the attempt, locks the skill rating row, applies the Elo update, writes the rating event, and activates the level of the activity.
+ * @summary Record an activity attempt
+ */
+export const useCreateAttempt = <TError = BadRequestResponse | NotFoundResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAttempt>>, TError,CreateAttemptMutationVariables, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createAttempt>>,
+        TError,
+        CreateAttemptMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAttemptMutationOptions(options), queryClient);
+    }
 

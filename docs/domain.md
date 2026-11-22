@@ -41,9 +41,11 @@ Satu attempt = satu transaksi:
 3. Hitung rating baru (`rating.Update`).
 4. Update `skill_ratings` (+ `attempts_count`).
 5. Insert `rating_events` (before/after/delta).
-6. Opsional: insert `mistakes` dari feedback AI.
+6. `StartLevel` level activity (insert-only) + `SeedCards` vocab level itu.
+7. Opsional: insert `mistakes` dari feedback AI (belum ada; menyusul saat feedback AI).
 
 Jangan pecah jadi beberapa request/transaksi. Lock mencegah race antar device.
+Implementasi: `apps/api/internal/attempt`.
 
 ## Gate A1 -> A2 (semua wajib)
 
@@ -63,6 +65,9 @@ Implementasi: `apps/api/internal/srs/srs.go` + `srs_test.go`. Grade: 0 forgot, 1
 - **Easy**: `ease += 0.15`, `interval = round(interval * 1.3)`.
 
 **Review vocab tidak mengubah skill rating.** Hanya unit activity yang mengubah rating.
+
+Kartu dibuat oleh `SeedCards` saat attempt pertama di level/track tersebut, tidak saat
+registrasi profil. `apps/api/internal/dashboard` memakai aturan streak D-024.
 
 ## Difficulty activity
 

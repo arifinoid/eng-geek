@@ -5,8 +5,10 @@ from A1 to IELTS/OET B2-C1. Two profiles, shared core plus professional role pac
 
 ## Status
 
-Scaffold only. Design and domain rules live in `docs/`; `CLAUDE.md` is the entry point
-for Claude Code.
+API v1 serves profiles, units, attempt recording (one transaction with the skill
+rating update), and the profile dashboard. Content is seeded from
+`apps/api/content/a1`; the web app is still a PWA skeleton. Design and domain rules
+live in `docs/`; `CLAUDE.md` is the entry point for Claude Code.
 
 ## Stack
 

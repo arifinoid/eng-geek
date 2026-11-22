@@ -9,6 +9,23 @@ import (
 	"context"
 )
 
+const getUnit = `-- name: GetUnit :one
+SELECT id, level_code, track, title, position FROM units WHERE id = $1
+`
+
+func (q *Queries) GetUnit(ctx context.Context, id int64) (Unit, error) {
+	row := q.db.QueryRow(ctx, getUnit, id)
+	var i Unit
+	err := row.Scan(
+		&i.ID,
+		&i.LevelCode,
+		&i.Track,
+		&i.Title,
+		&i.Position,
+	)
+	return i, err
+}
+
 const listActivitiesByUnit = `-- name: ListActivitiesByUnit :many
 SELECT id, unit_id, type, skill, difficulty, content, position FROM activities WHERE unit_id = $1 ORDER BY position
 `

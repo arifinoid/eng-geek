@@ -9,6 +9,5 @@ sql:
         out: "internal/store"
         sql_package: "pgx/v5"
         emit_json_tags: true
-        overrides:
-          - db_type: "numeric"
-            go_type: "float64"
+        # NUMERIC columns map to pgtype.Numeric; sqlc v1.31 ignores type
+        # overrides for them, so conversions live next to the query call sites.

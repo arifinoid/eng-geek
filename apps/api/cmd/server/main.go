@@ -13,9 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arifinoid/eng-geek/apps/api/internal/api"
+	"github.com/arifinoid/eng-geek/apps/api/internal/assessment"
 	"github.com/arifinoid/eng-geek/apps/api/internal/attempt"
 	"github.com/arifinoid/eng-geek/apps/api/internal/config"
 	"github.com/arifinoid/eng-geek/apps/api/internal/dashboard"
+	"github.com/arifinoid/eng-geek/apps/api/internal/progress"
 	"github.com/arifinoid/eng-geek/apps/api/internal/store"
 )
 
@@ -41,10 +43,13 @@ func main() {
 	}
 
 	queries := store.New(pool)
+	progressSvc := progress.NewService(pool, queries)
 	apiServer := api.NewServer(
 		queries,
 		attempt.NewService(pool, queries),
 		dashboard.NewService(queries),
+		assessment.NewService(pool, queries, progressSvc),
+		progressSvc,
 		logger,
 	)
 

@@ -31,6 +31,12 @@ export function AppHeader() {
           >
             {t("dashboard")}
           </Link>
+          <Link
+            href="/levels"
+            className="text-zinc-600 transition-colors hover:text-foreground dark:text-zinc-400"
+          >
+            {t("level")}
+          </Link>
         </nav>
       </div>
     </header>

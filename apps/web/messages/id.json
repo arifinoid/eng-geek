@@ -6,7 +6,8 @@
   "nav": {
     "home": "Beranda",
     "practice": "Latihan",
-    "dashboard": "Progres"
+    "dashboard": "Progres",
+    "level": "Level"
   },
   "common": {
     "loading": "Memuat…",
@@ -37,7 +38,11 @@
     "noData": "Belum ada data.",
     "nextUp": "Aktivitas berikutnya",
     "noNext": "Tidak ada aktivitas tersisa di level ini.",
-    "open": "Buka"
+    "open": "Buka",
+    "gate": "Gate level",
+    "gateDetails": "Detail & catat checkpoint",
+    "gatePassed": "Semua syarat level ini terpenuhi.",
+    "gateRemaining": "{{count}} syarat belum terpenuhi"
   },
   "practice": {
     "title": "Latihan",
@@ -75,5 +80,29 @@
     "lines": "Kalimat",
     "questions": "Pertanyaan",
     "speakingNote": "Penilaian suara oleh AI belum aktif. Latihlah lisan kamu secara mandiri."
+  },
+  "levels": {
+    "title": "Progres level",
+    "subtitle": "Syarat A1 → A2: 80% aktivitas selesai, checkpoint ≥ 70%, semua rating ≥ 1000.",
+    "currentGate": "Gate level",
+    "level": "Level",
+    "current": "Level saat ini",
+    "loading": "Memuat…",
+    "loadFailed": "Gagal memuat data.",
+    "passed": "Syarat level ini terpenuhi.",
+    "completion": "Penyelesaian",
+    "checkpointScore": "Checkpoint",
+    "weakestSkill": "Keterampilan terendah",
+    "record": "Catat assessment",
+    "kind": "Jenis",
+    "checkpoint": "Checkpoint",
+    "placement": "Penempatan",
+    "invalidLevel": "Kode level wajib diisi.",
+    "invalidScores": "Semua skor harus antara 0 dan 1.",
+    "save": "Simpan",
+    "completed": "Level selesai!",
+    "history": "Riwayat assessment",
+    "noData": "Belum ada assessment.",
+    "backToDashboard": "Kembali ke progres"
   }
 }

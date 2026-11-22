@@ -161,6 +161,18 @@ dinilai di client (skor = jumlah jawaban benar / jumlah soal) lalu dikirim ke
 ada. Alasan: satu sumber kebenaran untuk rating (server), dan UI bisa dipakai hari ini
 tanpa menunggu AI.
 
+## D-026: Gate atomic bersama checkpoint; placement tidak melompat level
+
+`checkpoint` dan `placement` sama-sama menulis `assessments`, tetapi hanya `checkpoint`
+yang menjalankan gate. `assessment.Record` membuka satu transaksi: baca profil + level,
+insert assessment, lalu untuk checkpoint panggil `progress.ApplyInTx` di transaksi yang
+sama. Jadi level tidak mungkin `completed` tanpa checkpoint pemicu, dan efek gate tidak
+bisa hilang di tengah. `placement` hanya mengevaluasi gate (read-only) untuk melaporkan
+celah, karena penempatan bukan bukti kelulusan level. Aturan gate murni di
+`internal/gate` (tanpa DB), `internal/progress` menyusun query + transaksi, dan
+`internal/assessment` menyusun atomicity. Alasan: menghilangkan state antara "assessment
+tersimpan" dan "level selesai", dan mencegah placement dipakai melompat level.
+
 ## Open decisions
 
 - Gate A2->B1 dan seterusnya: sementara reuse pola 80% / 70% / next-level-min.

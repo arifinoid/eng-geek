@@ -9,6 +9,8 @@ tags:
   - name: profiles
   - name: content
   - name: attempts
+  - name: assessments
+  - name: progress
 paths:
   /profiles:
     get:
@@ -145,6 +147,92 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Dashboard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /profiles/{profileId}/gate:
+    get:
+      operationId: getGate
+      tags: [progress]
+      summary: Level gate status for a profile
+      description: >
+        Reports completion, checkpoint and skill ratings for a level. Without the
+        level query parameter it uses the profile's current level.
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: level
+          in: query
+          required: false
+          description: Level code such as A1. Defaults to the profile's current level.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The gate result for the level
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Gate"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /profiles/{profileId}/assessments:
+    get:
+      operationId: listAssessments
+      tags: [assessments]
+      summary: List a profile's assessments
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of assessments to return. Defaults to 20, capped at 100.
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Assessments, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Assessment"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /assessments:
+    post:
+      operationId: createAssessment
+      tags: [assessments]
+      summary: Record a checkpoint or placement assessment
+      description: >
+        A checkpoint is stored in the same transaction as the level gate it
+        triggers, so a level cannot be completed without the assessment that
+        justified it. A placement only records the scores and reports the gate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentRequest"
+      responses:
+        "201":
+          description: The recorded assessment and the gate outcome
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAssessmentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
   /attempts:
@@ -405,3 +493,129 @@ components:
         - skills
         - weekly_minutes
         - next_activities
+    AssessmentScores:
+      type: object
+      properties:
+        listening:
+          type: number
+          minimum: 0
+          maximum: 1
+        reading:
+          type: number
+          minimum: 0
+          maximum: 1
+        writing:
+          type: number
+          minimum: 0
+          maximum: 1
+        speaking:
+          type: number
+          minimum: 0
+          maximum: 1
+      required: [listening, reading, writing, speaking]
+    AssessmentRequest:
+      type: object
+      properties:
+        profileId:
+          type: integer
+          format: int64
+        levelCode:
+          type: string
+          example: A1
+        kind:
+          type: string
+          enum: [checkpoint, placement]
+        scores:
+          $ref: "#/components/schemas/AssessmentScores"
+      required: [profileId, levelCode, kind, scores]
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        profile_id:
+          type: integer
+          format: int64
+        level_code:
+          type: string
+          example: A1
+        kind:
+          type: string
+          enum: [checkpoint, placement]
+        scores:
+          type: object
+          additionalProperties: true
+          description: The four skill scores as recorded.
+        overall:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - profile_id
+        - level_code
+        - kind
+        - scores
+        - overall
+        - created_at
+    Gate:
+      type: object
+      properties:
+        level:
+          type: string
+          example: A1
+        passed:
+          type: boolean
+        reasons:
+          type: array
+          items:
+            type: string
+          description: Human-readable reasons the gate is not met; empty when it passes.
+        completion_total:
+          type: integer
+        completion_done:
+          type: integer
+        completion_ratio:
+          type: number
+        checkpoint_overall:
+          type: number
+          nullable: true
+          description: The latest checkpoint overall for the level, if any.
+        min_skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        min_rating:
+          type: number
+        ratings:
+          type: object
+          additionalProperties:
+            type: number
+        next_level:
+          type: string
+          nullable: true
+          description: The level after this one; null at C2.
+      required:
+        - level
+        - passed
+        - reasons
+        - completion_total
+        - completion_done
+        - completion_ratio
+        - checkpoint_overall
+        - min_skill
+        - min_rating
+        - ratings
+        - next_level
+    CreateAssessmentResponse:
+      type: object
+      properties:
+        assessment:
+          $ref: "#/components/schemas/Assessment"
+        gate:
+          $ref: "#/components/schemas/Gate"
+        level_completed:
+          type: boolean
+          description: Whether recording this checkpoint completed the level.
+      required: [assessment, gate, level_completed]

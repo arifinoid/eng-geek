@@ -40,6 +40,25 @@ JOIN activities a ON a.id = t.activity_id
 JOIN units u ON u.id = a.unit_id
 WHERE t.profile_id = @profile_id AND u.level_code = @level_code;
 
+-- Level metadata, used to validate a level code.
+-- name: GetLevel :one
+SELECT * FROM levels WHERE code = @code;
+
+-- The level after the given one, by position. No rows at C2.
+-- name: NextLevel :one
+SELECT l.*
+FROM levels l
+JOIN levels current ON current.code = @level_code
+WHERE l.position = current.position + 1;
+
+-- Assessment history, newest first (checkpoint and placement).
+-- name: ListAssessments :many
+SELECT *
+FROM assessments
+WHERE profile_id = @profile_id
+ORDER BY created_at DESC
+LIMIT @lim;
+
 -- Latest checkpoint for the gate check
 -- name: LatestCheckpoint :one
 SELECT * FROM assessments

@@ -55,6 +55,19 @@ Implementasi: `apps/api/internal/attempt`.
 
 Kalau terpenuhi: `CompleteLevel(A1)` lalu `StartLevel(A2)`.
 
+Implementasi:
+- `internal/gate`: aturan murni (`Evaluate`), tanpa DB/HTTP, mudah dites.
+- `internal/progress`: `Evaluate` (baca) dan `Apply`/`ApplyInTx` (tulis, satu transaksi).
+- `internal/assessment`: `Record` menulis assessment; untuk `checkpoint`, gate diterapkan
+  di transaksi yang sama lewat `ApplyInTx`. `placement` hanya mencatat skor dan
+  mengevaluasi gate, tidak pernah melompat level.
+- Endpoint: `GET /api/v1/profiles/{id}/gate`, `POST /api/v1/assessments`,
+  `GET /api/v1/profiles/{id}/assessments`.
+
+Skill yang belum pernah dinilai memakai `rating.StartRating` (800) saat gate dievaluasi.
+Soal checkpoint memang belum ada (roadmap "Konten A1 lengkap"); di web, skor checkpoint
+dimasukkan manual lalu gate dievaluasi di server.
+
 ## SRS (SM-2 style)
 
 Implementasi: `apps/api/internal/srs/srs.go` + `srs_test.go`. Grade: 0 forgot, 1 hard, 2 good, 3 easy.

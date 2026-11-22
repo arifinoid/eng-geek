@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { isLocale, routing } from "@/i18n/routing";
+import { AppHeader } from "@/components/app-header";
+import { Providers } from "@/components/providers";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -32,7 +34,10 @@ export default async function LocaleLayout({
     <html lang={locale} className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <Providers>
+            <AppHeader />
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

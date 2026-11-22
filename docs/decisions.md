@@ -128,6 +128,39 @@ tidak cocok dengan kontrak (`{"track":"","valid":false}`). Handler `internal/api
 memetakan ke DTO sendiri (`track: null` atau string) supaya JSON mengikuti
 `packages/api-contract`. Alasan: kontrak API adalah sumber kebenaran frontend.
 
+## D-023: Attempt + rating satu transaksi, level & SRS aktif di attempt pertama
+
+`internal/attempt` membungkus seluruh langkah domain: insert `attempts`, lock
+`skill_ratings` `FOR UPDATE`, hitung Elo, update rating + `attempts_count`, tulis
+`rating_events`, lalu `StartLevel` dan `SeedCards` untuk level activity tersebut.
+`StartLevel` bersifat insert-only (`ON CONFLICT DO NOTHING`) supaya level yang sudah
+`completed` tidak dihidupkan lagi oleh attempt berikutnya. Kartu SRS dibuat pada
+attempt pertama di level itu, jadi review vocab langsung punya isi. Alasan: attempt
+dan rating tidak boleh pernah berbeda, dan lock mencegah race antar device.
+
+## D-024: Dashboard composition + aturan streak
+
+`internal/dashboard` menyusun streak, menit belajar mingguan, rating keempat skill,
+dan tiga aktivitas berikutnya per skill (skill terlemah lebih dulu). Streak dihitung
+dari `attempts` per hari di timezone profil; streak masih hidup kalau hari belajar
+terakhir adalah kemarin, jadi belum belajar hari ini tidak menghapus streak.
+`week_minutes` adalah menit pada minggu berjalan, `weekly_minutes` adalah bucket
+mingguan (default 8, maks 52). Alasan: aturan streak harus eksplisit dan bisa dites
+tanpa DB, jadi `Streak` murni dan `weekly_minutes` dihitung dari bucket.
+
+## D-025: Web dashboard + latihan di atas client API yang tipis
+
+`apps/web` memakai hook wrapper di `lib/api.ts` di atas client orval: wrapper membuka
+envelope `{data, status, headers}` dan melempar Error untuk status non-sukses, jadi
+komponen hanya melihat payload. Halaman memakai query string (`?id=`) karena static
+export tidak mengizinkan segment dinamis tanpa `generateStaticParams`, dan profil aktif
+disimpan di `localStorage` supaya URL tetap bersih. Activity `vocab`/`quiz`/`listening`
+dinilai di client (skor = jumlah jawaban benar / jumlah soal) lalu dikirim ke
+`POST /api/v1/attempts`, sehingga rating tetap dihitung di server. `writing` dan
+`speaking` hanya menampilkan prompt + catatan "coming soon" karena penilaian AI belum
+ada. Alasan: satu sumber kebenaran untuk rating (server), dan UI bisa dipakai hari ini
+tanpa menunggu AI.
+
 ## Open decisions
 
 - Gate A2->B1 dan seterusnya: sementara reuse pola 80% / 70% / next-level-min.

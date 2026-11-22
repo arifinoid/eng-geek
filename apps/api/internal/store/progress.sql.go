@@ -193,9 +193,7 @@ func (q *Queries) LevelTimeSpent(ctx context.Context, arg LevelTimeSpentParams) 
 const startLevel = `-- name: StartLevel :exec
 INSERT INTO level_progress (profile_id, level_code, status, started_at)
 VALUES ($1, $2, 'in_progress', now())
-ON CONFLICT (profile_id, level_code) DO UPDATE
-SET status = 'in_progress',
-    started_at = COALESCE(level_progress.started_at, now())
+ON CONFLICT (profile_id, level_code) DO NOTHING
 `
 
 type StartLevelParams struct {
@@ -203,6 +201,8 @@ type StartLevelParams struct {
 	LevelCode string `json:"level_code"`
 }
 
+// Idempotent: create the level as in_progress. An existing row is left alone so
+// a completed level is never resurrected by a later attempt in that level.
 func (q *Queries) StartLevel(ctx context.Context, arg StartLevelParams) error {
 	_, err := q.db.Exec(ctx, startLevel, arg.ProfileID, arg.LevelCode)
 	return err

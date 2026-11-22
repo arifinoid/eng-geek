@@ -13,7 +13,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/arifinoid/eng-geek/apps/api/internal/api"
+	"github.com/arifinoid/eng-geek/apps/api/internal/attempt"
 	"github.com/arifinoid/eng-geek/apps/api/internal/config"
+	"github.com/arifinoid/eng-geek/apps/api/internal/dashboard"
 	"github.com/arifinoid/eng-geek/apps/api/internal/store"
 )
 
@@ -39,10 +41,16 @@ func main() {
 	}
 
 	queries := store.New(pool)
-	apiServer := api.NewServer(queries, logger)
+	apiServer := api.NewServer(
+		queries,
+		attempt.NewService(pool, queries),
+		dashboard.NewService(queries),
+		logger,
+	)
 
 	mux := http.NewServeMux()
-	mux.Handle("GET /api/v1/", apiServer.Handler())
+	// No method in the mount pattern: the API mux owns the method routing.
+	mux.Handle("/api/v1/", apiServer.Handler())
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
@@ -50,7 +58,7 @@ func main() {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/id", http.StatusTemporaryRedirect)
 	})
-	mux.Handle("GET /", http.FileServer(http.Dir(cfg.StaticDir)))
+	mux.Handle("/", http.FileServer(http.Dir(cfg.StaticDir)))
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

@@ -55,10 +55,154 @@ export interface Unit {
   position: number;
 }
 
+export type ActivityType = typeof ActivityType[keyof typeof ActivityType];
+
+
+export const ActivityType = {
+  quiz: 'quiz',
+  vocab: 'vocab',
+  writing: 'writing',
+  speaking: 'speaking',
+  listening: 'listening',
+} as const;
+
+export type ActivitySkill = typeof ActivitySkill[keyof typeof ActivitySkill];
+
+
+export const ActivitySkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+/**
+ * One shape per type; see docs/content.md.
+ */
+export type ActivityContent = { [key: string]: unknown };
+
+export interface Activity {
+  id: number;
+  unit_id: number;
+  type: ActivityType;
+  skill: ActivitySkill;
+  difficulty: number;
+  position: number;
+  /** One shape per type; see docs/content.md. */
+  content: ActivityContent;
+}
+
+export interface AttemptRequest {
+  profileId: number;
+  activityId: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  score: number;
+  /** @minimum 0 */
+  durationSec: number;
+  /** Raw JSON feedback, stored as written (AI feedback for writing and speaking). */
+  feedback?: unknown;
+}
+
+export type AttemptSkill = typeof AttemptSkill[keyof typeof AttemptSkill];
+
+
+export const AttemptSkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+export interface Attempt {
+  id: number;
+  profile_id: number;
+  activity_id: number;
+  score: number;
+  duration_sec: number;
+  feedback?: unknown;
+  skill: AttemptSkill;
+  rating_before: number;
+  rating_after: number;
+  rating_delta: number;
+  created_at: string;
+}
+
+export type SkillRatingSkill = typeof SkillRatingSkill[keyof typeof SkillRatingSkill];
+
+
+export const SkillRatingSkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+export interface SkillRating {
+  skill: SkillRatingSkill;
+  rating: number;
+  level: string;
+  attempts_count: number;
+}
+
+export interface WeeklyMinutes {
+  week_start: string;
+  minutes: number;
+}
+
+export type NextActivityType = typeof NextActivityType[keyof typeof NextActivityType];
+
+
+export const NextActivityType = {
+  quiz: 'quiz',
+  vocab: 'vocab',
+  writing: 'writing',
+  speaking: 'speaking',
+  listening: 'listening',
+} as const;
+
+export type NextActivitySkill = typeof NextActivitySkill[keyof typeof NextActivitySkill];
+
+
+export const NextActivitySkill = {
+  listening: 'listening',
+  reading: 'reading',
+  writing: 'writing',
+  speaking: 'speaking',
+} as const;
+
+export interface NextActivity {
+  id: number;
+  unit_id: number;
+  unit_position: number;
+  unit_title: string;
+  type: NextActivityType;
+  skill: NextActivitySkill;
+  difficulty: number;
+  position: number;
+}
+
+export interface Dashboard {
+  profile: Profile;
+  level: string;
+  streak_days: number;
+  week_minutes: number;
+  skills: SkillRating[];
+  weekly_minutes: WeeklyMinutes[];
+  next_activities: NextActivity[];
+}
+
 /**
  * Not found
  */
 export type NotFoundResponse = Error;
+
+/**
+ * Bad request
+ */
+export type BadRequestResponse = Error;
 
 export type ListProfilesParams = {
   /** Household id. Defaults to 1 for the single-household setup. */
@@ -67,5 +211,10 @@ export type ListProfilesParams = {
 
 export type ListUnitsParams = {
   profileId: number;
+};
+
+export type GetDashboardParams = {
+  /** Weekly study-minute buckets to return. Defaults to 8. */
+  weeks?: number;
 };
 

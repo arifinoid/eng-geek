@@ -8,13 +8,72 @@
     "practice": "Practice",
     "dashboard": "Progress"
   },
+  "common": {
+    "loading": "Loading…",
+    "needProfile": "Pick a profile on the home page first.",
+    "goHome": "Pick a profile"
+  },
   "home": {
     "title": "Welcome to eng-geek",
     "subtitle": "Start at A1 and reach your IELTS/OET target.",
-    "cta": "Start practicing"
+    "cta": "Start practicing",
+    "pickProfile": "Pick a profile to begin",
+    "loadingProfiles": "Loading profiles…",
+    "loadFailed": "Could not load profiles.",
+    "noProfiles": "No profiles yet. Run the API seeder first."
+  },
+  "dashboard": {
+    "title": "Progress",
+    "loading": "Loading progress…",
+    "loadFailed": "Could not load progress.",
+    "streak": "Streak",
+    "days": "days",
+    "weekMinutes": "Minutes this week",
+    "minutes": "min",
+    "level": "Level",
+    "skills": "Skill ratings",
+    "attempts": "attempts",
+    "weeklyMinutes": "Study minutes per week",
+    "noData": "No data yet.",
+    "nextUp": "Next activities",
+    "noNext": "No activities left in this level.",
+    "open": "Open"
   },
   "practice": {
     "title": "Practice",
-    "subtitle": "Pick an activity for the active profile."
+    "subtitle": "Pick a unit for the active profile.",
+    "loading": "Loading units…",
+    "loadFailed": "Could not load units.",
+    "noUnits": "No units for this profile yet."
+  },
+  "unit": {
+    "title": "Unit",
+    "loading": "Loading activities…",
+    "loadFailed": "Could not load activities.",
+    "invalidUnit": "Invalid unit.",
+    "backToUnits": "All units",
+    "noActivities": "This unit has no activities yet."
+  },
+  "activity": {
+    "title": "Activity",
+    "loading": "Loading activity…",
+    "loadFailed": "Could not load the activity.",
+    "invalidActivity": "Invalid activity.",
+    "backToUnit": "Back to unit",
+    "unsupported": "This activity type cannot be rendered yet.",
+    "script": "Transcript",
+    "audioPending": "Audio is not generated yet. Read the transcript instead.",
+    "check": "Check",
+    "result": "Result",
+    "score": "Score",
+    "ratingDelta": "Rating change",
+    "writingTitle": "Writing",
+    "minWords": "Minimum words",
+    "modelAnswer": "Model answer",
+    "writingNote": "AI scoring for writing is not live yet. Do the task and keep your own answer.",
+    "speakingTitle": "Speaking",
+    "lines": "Lines",
+    "questions": "Questions",
+    "speakingNote": "AI scoring for speaking is not live yet. Practise out loud on your own."
   }
 }

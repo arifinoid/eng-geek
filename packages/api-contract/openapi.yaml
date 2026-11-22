@@ -8,6 +8,7 @@ servers:
 tags:
   - name: profiles
   - name: content
+  - name: attempts
 paths:
   /profiles:
     get:
@@ -74,10 +75,114 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Unit"
+  /units/{unitId}/activities:
+    get:
+      operationId: listUnitActivities
+      tags: [content]
+      summary: List activities in a unit
+      parameters:
+        - name: unitId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Activities in the unit, ordered by position
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /activities/{activityId}:
+    get:
+      operationId: getActivity
+      tags: [content]
+      summary: Get one activity with its content
+      parameters:
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: The activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /profiles/{profileId}/dashboard:
+    get:
+      operationId: getDashboard
+      tags: [profiles]
+      summary: Dashboard for a profile
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: weeks
+          in: query
+          required: false
+          description: Weekly study-minute buckets to return. Defaults to 8.
+          schema:
+            type: integer
+            default: 8
+      responses:
+        "200":
+          description: Streak, study time, skill ratings, and next activities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /attempts:
+    post:
+      operationId: createAttempt
+      tags: [attempts]
+      summary: Record an activity attempt
+      description: >
+        One transaction: stores the attempt, locks the skill rating row,
+        applies the Elo update, writes the rating event, and activates the
+        level of the activity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttemptRequest"
+      responses:
+        "201":
+          description: The recorded attempt and its rating change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attempt"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
   responses:
     NotFound:
       description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Bad request
       content:
         application/json:
           schema:
@@ -128,3 +233,175 @@ components:
         position:
           type: integer
       required: [id, level_code, title, position]
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        unit_id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: [quiz, vocab, writing, speaking, listening]
+        skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        difficulty:
+          type: integer
+        position:
+          type: integer
+        content:
+          type: object
+          additionalProperties: true
+          description: One shape per type; see docs/content.md.
+      required: [id, unit_id, type, skill, difficulty, position, content]
+    AttemptRequest:
+      type: object
+      properties:
+        profileId:
+          type: integer
+          format: int64
+        activityId:
+          type: integer
+          format: int64
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        durationSec:
+          type: integer
+          minimum: 0
+        feedback:
+          nullable: true
+          description: Raw JSON feedback, stored as written (AI feedback for writing and speaking).
+      required: [profileId, activityId, score, durationSec]
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        profile_id:
+          type: integer
+          format: int64
+        activity_id:
+          type: integer
+          format: int64
+        score:
+          type: number
+        duration_sec:
+          type: integer
+        feedback:
+          nullable: true
+        skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        rating_before:
+          type: number
+        rating_after:
+          type: number
+        rating_delta:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - profile_id
+        - activity_id
+        - score
+        - duration_sec
+        - skill
+        - rating_before
+        - rating_after
+        - rating_delta
+        - created_at
+    SkillRating:
+      type: object
+      properties:
+        skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        rating:
+          type: number
+        level:
+          type: string
+          example: A1
+        attempts_count:
+          type: integer
+      required: [skill, rating, level, attempts_count]
+    WeeklyMinutes:
+      type: object
+      properties:
+        week_start:
+          type: string
+          example: "2026-11-16"
+        minutes:
+          type: integer
+      required: [week_start, minutes]
+    NextActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        unit_id:
+          type: integer
+          format: int64
+        unit_position:
+          type: integer
+        unit_title:
+          type: string
+        type:
+          type: string
+          enum: [quiz, vocab, writing, speaking, listening]
+        skill:
+          type: string
+          enum: [listening, reading, writing, speaking]
+        difficulty:
+          type: integer
+        position:
+          type: integer
+      required:
+        - id
+        - unit_id
+        - unit_position
+        - unit_title
+        - type
+        - skill
+        - difficulty
+        - position
+    Dashboard:
+      type: object
+      properties:
+        profile:
+          $ref: "#/components/schemas/Profile"
+        level:
+          type: string
+          example: A1
+        streak_days:
+          type: integer
+        week_minutes:
+          type: integer
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillRating"
+        weekly_minutes:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyMinutes"
+        next_activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/NextActivity"
+      required:
+        - profile
+        - level
+        - streak_days
+        - week_minutes
+        - skills
+        - weekly_minutes
+        - next_activities

@@ -14,7 +14,8 @@ func Load() Config {
 	return Config{
 		Port:        env("PORT", "8080"),
 		DatabaseURL: os.Getenv("DATABASE_URL"),
-		StaticDir:   env("STATIC_DIR", "../../web/out"),
+		// The server runs from apps/api, so the web build is one level up.
+		StaticDir: env("STATIC_DIR", "../web/out"),
 	}
 }
 

@@ -116,7 +116,8 @@ func (q *Queries) InsertRatingEvent(ctx context.Context, arg InsertRatingEventPa
 }
 
 const nextActivities = `-- name: NextActivities :many
-SELECT a.id, a.unit_id, a.type, a.skill, a.difficulty, a.content, a.position
+SELECT a.id, a.unit_id, a.type, a.skill, a.difficulty, a.content, a.position,
+       u.title AS unit_title, u.position AS unit_position
 FROM activities a
 JOIN units u ON u.id = a.unit_id
 WHERE a.skill = $1
@@ -141,8 +142,20 @@ type NextActivitiesParams struct {
 	Lim       int32     `json:"lim"`
 }
 
+type NextActivitiesRow struct {
+	ID           int64        `json:"id"`
+	UnitID       int64        `json:"unit_id"`
+	Type         ActivityType `json:"type"`
+	Skill        Skill        `json:"skill"`
+	Difficulty   int32        `json:"difficulty"`
+	Content      []byte       `json:"content"`
+	Position     int32        `json:"position"`
+	UnitTitle    string       `json:"unit_title"`
+	UnitPosition int32        `json:"unit_position"`
+}
+
 // Pick the next activities: weakest skill first, difficulty near the rating.
-func (q *Queries) NextActivities(ctx context.Context, arg NextActivitiesParams) ([]Activity, error) {
+func (q *Queries) NextActivities(ctx context.Context, arg NextActivitiesParams) ([]NextActivitiesRow, error) {
 	rows, err := q.db.Query(ctx, nextActivities,
 		arg.Skill,
 		arg.LevelCode,
@@ -155,9 +168,9 @@ func (q *Queries) NextActivities(ctx context.Context, arg NextActivitiesParams) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Activity
+	var items []NextActivitiesRow
 	for rows.Next() {
-		var i Activity
+		var i NextActivitiesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UnitID,
@@ -166,6 +179,8 @@ func (q *Queries) NextActivities(ctx context.Context, arg NextActivitiesParams) 
 			&i.Difficulty,
 			&i.Content,
 			&i.Position,
+			&i.UnitTitle,
+			&i.UnitPosition,
 		); err != nil {
 			return nil, err
 		}
@@ -216,7 +231,7 @@ func (q *Queries) RatingHistory(ctx context.Context, arg RatingHistoryParams) ([
 }
 
 const studyDays = `-- name: StudyDays :many
-SELECT DISTINCT (created_at AT TIME ZONE $1)::date AS day
+SELECT DISTINCT (created_at AT TIME ZONE $1::text)::date AS day
 FROM attempts
 WHERE profile_id = $2
 ORDER BY day DESC
@@ -224,8 +239,8 @@ LIMIT 400
 `
 
 type StudyDaysParams struct {
-	Tz        pgtype.Interval `json:"tz"`
-	ProfileID int64           `json:"profile_id"`
+	Tz        string `json:"tz"`
+	ProfileID int64  `json:"profile_id"`
 }
 
 // Streak helper: distinct study days, newest first (compute the streak in Go)
@@ -269,7 +284,7 @@ func (q *Queries) UpdateSkillRating(ctx context.Context, arg UpdateSkillRatingPa
 }
 
 const weeklyStudyMinutes = `-- name: WeeklyStudyMinutes :many
-SELECT date_trunc('week', created_at AT TIME ZONE $1)::date AS week_start,
+SELECT date_trunc('week', created_at AT TIME ZONE $1::text)::date AS week_start,
        (sum(duration_sec) / 60)::int AS minutes
 FROM attempts
 WHERE profile_id = $2
@@ -279,9 +294,9 @@ LIMIT $3
 `
 
 type WeeklyStudyMinutesParams struct {
-	Tz        pgtype.Interval `json:"tz"`
-	ProfileID int64           `json:"profile_id"`
-	Weeks     int32           `json:"weeks"`
+	Tz        string `json:"tz"`
+	ProfileID int64  `json:"profile_id"`
+	Weeks     int32  `json:"weeks"`
 }
 
 type WeeklyStudyMinutesRow struct {

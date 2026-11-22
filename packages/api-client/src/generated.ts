@@ -107,7 +107,7 @@ export const getListProfilesUrl = (params?: ListProfilesParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/profiles?${stringifiedParams}` : `/profiles`
+  return stringifiedParams.length > 0 ? `/api/v1/profiles?${stringifiedParams}` : `/api/v1/profiles`
 }
 
 /**
@@ -137,7 +137,7 @@ export const listProfiles = async (params?: ListProfilesParams, options?: Reques
 
 export const getListProfilesQueryKey = (params?: ListProfilesParams,) => {
     return [
-    `/profiles`, ...(params ? [params] : [])
+    `/api/v1/profiles`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -234,7 +234,7 @@ export const getGetProfileUrl = (profileId: number,) => {
 
 
 
-  return `/profiles/${profileId}`
+  return `/api/v1/profiles/${profileId}`
 }
 
 /**
@@ -264,7 +264,7 @@ export const getProfile = async (profileId: number, options?: RequestInit): Prom
 
 export const getGetProfileQueryKey = (profileId: number,) => {
     return [
-    `/profiles/${profileId}`
+    `/api/v1/profiles/${profileId}`
     ] as const;
     }
 
@@ -361,7 +361,7 @@ export const getListUnitsUrl = (params: ListUnitsParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/units?${stringifiedParams}` : `/units`
+  return stringifiedParams.length > 0 ? `/api/v1/units?${stringifiedParams}` : `/api/v1/units`
 }
 
 /**
@@ -391,7 +391,7 @@ export const listUnits = async (params: ListUnitsParams, options?: RequestInit):
 
 export const getListUnitsQueryKey = (params?: ListUnitsParams,) => {
     return [
-    `/units`, ...(params ? [params] : [])
+    `/api/v1/units`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -488,7 +488,7 @@ export const getListUnitActivitiesUrl = (unitId: number,) => {
 
 
 
-  return `/units/${unitId}/activities`
+  return `/api/v1/units/${unitId}/activities`
 }
 
 /**
@@ -518,7 +518,7 @@ export const listUnitActivities = async (unitId: number, options?: RequestInit):
 
 export const getListUnitActivitiesQueryKey = (unitId: number,) => {
     return [
-    `/units/${unitId}/activities`
+    `/api/v1/units/${unitId}/activities`
     ] as const;
     }
 
@@ -615,7 +615,7 @@ export const getGetActivityUrl = (activityId: number,) => {
 
 
 
-  return `/activities/${activityId}`
+  return `/api/v1/activities/${activityId}`
 }
 
 /**
@@ -645,7 +645,7 @@ export const getActivity = async (activityId: number, options?: RequestInit): Pr
 
 export const getGetActivityQueryKey = (activityId: number,) => {
     return [
-    `/activities/${activityId}`
+    `/api/v1/activities/${activityId}`
     ] as const;
     }
 
@@ -750,7 +750,7 @@ export const getGetDashboardUrl = (profileId: number,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/profiles/${profileId}/dashboard?${stringifiedParams}` : `/profiles/${profileId}/dashboard`
+  return stringifiedParams.length > 0 ? `/api/v1/profiles/${profileId}/dashboard?${stringifiedParams}` : `/api/v1/profiles/${profileId}/dashboard`
 }
 
 /**
@@ -782,7 +782,7 @@ export const getDashboard = async (profileId: number,
 export const getGetDashboardQueryKey = (profileId: number,
     params?: GetDashboardParams,) => {
     return [
-    `/profiles/${profileId}/dashboard`, ...(params ? [params] : [])
+    `/api/v1/profiles/${profileId}/dashboard`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -892,7 +892,7 @@ export const getGetGateUrl = (profileId: number,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/profiles/${profileId}/gate?${stringifiedParams}` : `/profiles/${profileId}/gate`
+  return stringifiedParams.length > 0 ? `/api/v1/profiles/${profileId}/gate?${stringifiedParams}` : `/api/v1/profiles/${profileId}/gate`
 }
 
 /**
@@ -925,7 +925,7 @@ export const getGate = async (profileId: number,
 export const getGetGateQueryKey = (profileId: number,
     params?: GetGateParams,) => {
     return [
-    `/profiles/${profileId}/gate`, ...(params ? [params] : [])
+    `/api/v1/profiles/${profileId}/gate`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -1047,7 +1047,7 @@ export const getListAssessmentsUrl = (profileId: number,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/profiles/${profileId}/assessments?${stringifiedParams}` : `/profiles/${profileId}/assessments`
+  return stringifiedParams.length > 0 ? `/api/v1/profiles/${profileId}/assessments?${stringifiedParams}` : `/api/v1/profiles/${profileId}/assessments`
 }
 
 /**
@@ -1079,7 +1079,7 @@ export const listAssessments = async (profileId: number,
 export const getListAssessmentsQueryKey = (profileId: number,
     params?: ListAssessmentsParams,) => {
     return [
-    `/profiles/${profileId}/assessments`, ...(params ? [params] : [])
+    `/api/v1/profiles/${profileId}/assessments`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -1186,7 +1186,7 @@ export const getCreateAssessmentUrl = () => {
 
 
 
-  return `/assessments`
+  return `/api/v1/assessments`
 }
 
 /**
@@ -1293,7 +1293,7 @@ export const getCreateAttemptUrl = () => {
 
 
 
-  return `/attempts`
+  return `/api/v1/attempts`
 }
 
 /**

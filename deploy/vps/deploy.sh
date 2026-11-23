@@ -64,7 +64,7 @@ CGO_ENABLED=0 "$GO" -C apps/api build -o "$WORK/release/server" ./cmd/server
 CGO_ENABLED=0 "$GO" -C apps/api build -o "$WORK/release/seed" ./cmd/seed
 
 log "stage release"
-mkdir -p "$WORK/release/apps/api"
+mkdir -p "$WORK/release/apps/api/db" "$WORK/release/apps/api/content"
 cp -r apps/web/out "$WORK/release/out"
 cp -r apps/api/db/migrations "$WORK/release/apps/api/db/migrations"
 cp -r apps/api/content/a1 "$WORK/release/apps/api/content/a1"
